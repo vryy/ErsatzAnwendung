@@ -1,0 +1,43 @@
+## generate variables with the sources
+set( KRATOS_ERSATZ_ANWENDUNG_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/ersatz_anwendung.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_strategies_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/ersatz_python_anwendung.cpp
+)
+
+###############################################################
+## define library Kratos which defines the basic python interface
+add_library(KratosErsatzAnwendung SHARED ${KRATOS_ERSATZ_ANWENDUNG_SOURCES})
+
+target_link_libraries(KratosErsatzAnwendung PUBLIC KratosCore)
+target_link_libraries(KratosErsatzAnwendung PRIVATE ${LAPACK_LIBRARIES})
+
+target_include_directories(KratosErsatzAnwendung PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external_includes)
+
+target_compile_definitions(KratosErsatzAnwendung PRIVATE KRATOS_CORE=IMPORT)
+target_compile_definitions(KratosErsatzAnwendung PRIVATE ERSATZ_ANWENDUNG=EXPORT)
+
+set_target_properties(KratosErsatzAnwendung PROPERTIES PREFIX "")
+install(TARGETS KratosErsatzAnwendung DESTINATION libs )
+
+# changing the .dll suffix to .pyd
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set_target_properties(KratosErsatzAnwendung PROPERTIES SUFFIX .pyd)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+# changing the .dylib suffix to .so
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set_target_properties(KratosErsatzAnwendung PROPERTIES SUFFIX .so)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+if(${INSTALL_PYTHON_FILES} MATCHES ON)
+  get_filename_component (CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python_scripts DESTINATION applications/${CURRENT_DIR_NAME}  FILES_MATCHING PATTERN "*.py"  PATTERN ".svn" EXCLUDE)
+endif(${INSTALL_PYTHON_FILES} MATCHES ON)
+
+# get_property(inc_dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+# message("TestApplication subdir inc_dirs = ${inc_dirs}")
+
+# Add to the KratosMultiphysics Python module
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/ErsatzAnwendung.py" DESTINATION KratosMultiphysics )

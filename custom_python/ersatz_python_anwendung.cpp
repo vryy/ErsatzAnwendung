@@ -1,0 +1,44 @@
+//
+//   Project Name:        KratosErsatzAnwendung
+//   Last modified by:    $Author: hbui $
+//   Date:                $Date: Jan 20, 2017 $
+//
+//
+
+
+// System includes
+
+
+// External includes
+#if defined(KRATOS_PYTHON)
+#include <boost/python.hpp>
+
+
+// Project includes
+#include "includes/define.h"
+#include "custom_python/add_custom_utilities_to_python.h"
+#include "ersatz_anwendung.h"
+
+namespace Kratos
+{
+
+namespace Python
+{
+
+    using namespace boost::python;
+    BOOST_PYTHON_MODULE(KratosErsatzAnwendung)
+    {
+
+        class_<KratosErsatzAnwendung, KratosErsatzAnwendung::Pointer,
+               bases<KratosApplication>, boost::noncopyable>
+               ("KratosErsatzAnwendung");
+
+        ErsatzAnwendung_AddCustomUtilitiesToPython();
+
+    }
+
+} // namespace Python.
+
+} // namespace Kratos.
+
+#endif // KRATOS_PYTHON
