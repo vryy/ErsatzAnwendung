@@ -16,6 +16,8 @@
 
 // Project includes
 #include "includes/define.h"
+#include "custom_python/add_custom_processes_to_python.h"
+#include "custom_python/add_custom_strategies_to_python.h"
 #include "custom_python/add_custom_utilities_to_python.h"
 #include "ersatz_anwendung.h"
 
@@ -33,6 +35,8 @@ namespace Python
                bases<KratosApplication>, boost::noncopyable>
                ("KratosErsatzAnwendung");
 
+        ErsatzAnwendung_AddCustomProcessesToPython();
+        ErsatzAnwendung_AddCustomStrategiesToPython();
         ErsatzAnwendung_AddCustomUtilitiesToPython();
 
     }

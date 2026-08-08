@@ -206,7 +206,7 @@ public:
     * @param x the solution
     * @param b the given rhs
     */
-    static int Solve( const Matrix& A, Vector& x, const Vector& b )
+    static int Solve(const Matrix& A, Vector& x, const Vector& b)
     {
         using namespace boost::numeric::ublas;
         typedef permutation_matrix<std::size_t> pmatrix;
@@ -214,10 +214,11 @@ public:
         const std::size_t size = A.size1();
         pmatrix pm(size);
         const int singular = lu_factorize(Acopy, pm);
-        Matrix inverse;
-        inverse.assign(IdentityMatrix(size));
-        lu_substitute(Acopy, pm, inverse);
-        noalias(x) = prod(inverse, b);
+        if (!singular)
+        {
+            noalias(x) = b;
+            lu_substitute(Acopy, pm, x);
+        }
         return singular;
     }
 
