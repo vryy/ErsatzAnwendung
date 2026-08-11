@@ -18,6 +18,7 @@
 #include "includes/define.h"
 #include "includes/model_part.h"
 #include "processes/process.h"
+#include "linear_solvers/linear_solver.h"
 #include "custom_utilities/pod_utils.h"
 
 
@@ -25,10 +26,11 @@ namespace Kratos
 {
 
 /**
- * This base class provides abstract functions for POD operations
+ * This base class provides abstract functions for POD operations.
+ * A POD process is also a linear solver, since it can apply projection on the linear system.
  */
-template<class TSparseSpace, class TModelPart>
-class PodProcess : public Process
+template<class TSparseSpace, class TDenseSpace, class TModelPart>
+class PodProcess : public Process, public LinearSolver<TSparseSpace, TDenseSpace, TModelPart>
 {
 public:
 
@@ -39,6 +41,8 @@ public:
 
     typedef typename TSparseSpace::MatrixType TSystemMatrixType;
     typedef typename TSparseSpace::VectorType TSystemVectorType;
+
+    typedef LinearSolver<TSparseSpace, TDenseSpace, TModelPart> TLinearSolver;
 
     /**
      * Default constructor
@@ -71,6 +75,12 @@ public:
     virtual void ApplyProjection(TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb)
     {
         KRATOS_ERROR << "Calling base class function";
+    }
+
+    bool Solve(TSystemMatrixType& rA, TSystemVectorType& rX, TSystemVectorType& rB) override
+    {
+        this->ApplyProjection(rA, rX, rB);
+        return true;
     }
 
 protected:

@@ -71,6 +71,7 @@ public:
     typedef typename BaseType::TSchemeType TSchemeType;
 
     typedef typename BaseType::TSparseSpaceType TSparseSpaceType;
+    typedef typename BaseType::TDenseSpaceType TDenseSpaceType;
 
     typedef typename BaseType::TLinearSolverType TLinearSolverType;
 
@@ -102,20 +103,21 @@ public:
 
     typedef typename MatrixVectorTypeSelector<TDataType>::ZeroVectorType ZeroVectorType;
 
-    typedef PodProcess<TSparseSpaceType, ModelPartType> PodProcessType;
+    typedef PodProcess<TSparseSpaceType, TDenseSpaceType, ModelPartType> PodProcessType;
 
     /*@} */
     /**@name Life Cycle
     */
     /*@{ */
 
-    /** Constructor.
-    */
+    /** Default constructor.
+     */
     ProjectionBasedPodBuilderAndSolver(typename TLinearSolverType::Pointer pLinearSystemSolver)
     : BaseType(pLinearSystemSolver)
     {
-        mpPodProcess = typename PodProcessType::Pointer(
-            new SnapshotCollectingProcess<TSparseSpaceType, TLinearSolverType, ModelPartType>(pLinearSystemSolver));
+        /// The default PodProcess is the one collecting snapshots only. On the solve, it relies on FOM linear solver.
+        this->SetPodProcess(typename PodProcessType::Pointer(
+            new SnapshotCollectingProcess<TSparseSpaceType, TDenseSpaceType, ModelPartType>(pLinearSystemSolver)));
     }
 
     /** Destructor.
@@ -152,31 +154,6 @@ public:
         mpPodProcess->ExecuteInitializeSolutionStep();
     }
 
-    void BuildAndSolve(
-        typename TSchemeType::Pointer pScheme,
-        ModelPartType& rModelPart,
-        TSystemMatrixType& rA,
-        TSystemVectorType& rDx,
-        TSystemVectorType& rb
-    ) override
-    {
-        KRATOS_ERROR << "This function shall not be called. Use Build() and SystemSolve() separately.";
-    }
-
-    void SystemSolve(
-        TSystemMatrixType& rA,
-        TSystemVectorType& rDx,
-        TSystemVectorType& rb
-    ) override
-    {
-        KRATOS_TRY
-
-        // invoke the POD process to apply projection on the linear system
-        mpPodProcess->ApplyProjection(rA, rDx, rb);
-
-        KRATOS_CATCH("")
-    }
-
     void FinalizeSolutionStep(
         ModelPartType& rModelPart,
         TSystemMatrixType& rA,
@@ -200,6 +177,7 @@ public:
     void SetPodProcess(typename PodProcessType::Pointer pPodProcess)
     {
         mpPodProcess = pPodProcess;
+        BaseType::SetLinearSystemSolver(pPodProcess);
     }
 
     typename PodProcessType::Pointer pGetPodProcess() const
@@ -267,6 +245,8 @@ private:
     /*@{ */
 
     typename PodProcessType::Pointer mpPodProcess;
+        // The PodBuilderAndSolver maintains a pointer of PodProcess, also as the linear solver.
+        // By this way, the methods BuildAndSolve of the base class can be reused non-intrusively.
 
     /*@} */
     /**@name Private Operators*/

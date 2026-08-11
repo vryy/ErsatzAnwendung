@@ -24,14 +24,14 @@ namespace Kratos
 /**
  * This process applies POD mode via projection
  */
-template<class TSparseSpace, class TModelPart>
-class PodProjectionProcess : public PodProcess<TSparseSpace, TModelPart>
+template<class TSparseSpace, class TDenseSpace, class TModelPart>
+class PodProjectionProcess : public PodProcess<TSparseSpace, TDenseSpace, TModelPart>
 {
 public:
 
     KRATOS_CLASS_POINTER_DEFINITION( PodProjectionProcess );
 
-    typedef PodProcess<TSparseSpace, TModelPart> BaseType;
+    typedef PodProcess<TSparseSpace, TDenseSpace, TModelPart> BaseType;
     typedef typename BaseType::TSystemMatrixType TSystemMatrixType;
     typedef typename BaseType::TSystemVectorType TSystemVectorType;
 

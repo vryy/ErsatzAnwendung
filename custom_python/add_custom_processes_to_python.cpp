@@ -40,13 +40,13 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
 
     typedef LinearSolver<SparseSpaceType, LocalSpaceType, ModelPart> LinearSolverType;
 
-    typedef PodProcess<SparseSpaceType, ModelPart> PodProcessType;
+    typedef PodProcess<SparseSpaceType, LocalSpaceType, ModelPart> PodProcessType;
 
-    typedef SnapshotCollectingProcess<SparseSpaceType, LinearSolverType, ModelPart> SnapshotCollectingProcessType;
+    typedef SnapshotCollectingProcess<SparseSpaceType, LocalSpaceType, ModelPart> SnapshotCollectingProcessType;
 
-    typedef PodProjectionProcess<SparseSpaceType, ModelPart> PodProjectionProcessType;
+    typedef PodProjectionProcess<SparseSpaceType, LocalSpaceType, ModelPart> PodProjectionProcessType;
 
-    class_<PodProcessType, typename PodProcessType::Pointer, bases<Process>, boost::noncopyable>
+    class_<PodProcessType, typename PodProcessType::Pointer, bases<Process, LinearSolverType>, boost::noncopyable>
     ("PodProcess", init<>())
     ;
 

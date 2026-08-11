@@ -24,16 +24,17 @@ namespace Kratos
 /**
  * This process only collects the snapshot and computing the POD basis after the simulation ends
  */
-template<class TSparseSpace, class TLinearSolver, class TModelPart>
-class SnapshotCollectingProcess : public PodProcess<TSparseSpace, TModelPart>
+template<class TSparseSpace, class TDenseSpace, class TModelPart>
+class SnapshotCollectingProcess : public PodProcess<TSparseSpace, TDenseSpace, TModelPart>
 {
 public:
 
     KRATOS_CLASS_POINTER_DEFINITION( SnapshotCollectingProcess );
 
-    typedef PodProcess<TSparseSpace, TModelPart> BaseType;
+    typedef PodProcess<TSparseSpace, TDenseSpace, TModelPart> BaseType;
     typedef typename BaseType::TSystemMatrixType TSystemMatrixType;
     typedef typename BaseType::TSystemVectorType TSystemVectorType;
+    typedef typename BaseType::TLinearSolver TLinearSolver;
 
     SnapshotCollectingProcess(typename TLinearSolver::Pointer pLinearSystemSolver)
     : BaseType(), mpLinearSystemSolver(pLinearSystemSolver)
