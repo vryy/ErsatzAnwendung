@@ -16,7 +16,6 @@
 
 /* Project includes */
 #include "custom_processes/pod_process.h"
-#include "custom_utilities/pod_utils.h"
 
 
 namespace Kratos
@@ -25,28 +24,32 @@ namespace Kratos
 /**
  * This process reads the POD mode from file
  */
-class PodModeReadingProcess : public PodProcess
+template<class TSparseSpace, class TModelPart>
+class PodModeReadingProcess : public PodProcess<TSparseSpace, TModelPart>
 {
 public:
 
     KRATOS_CLASS_POINTER_DEFINITION( PodModeReadingProcess );
 
-    typedef PodProcess BaseType;
+    typedef PodProcess<TSparseSpace, TModelPart> BaseType;
+    typedef typename BaseType::TSystemMatrixType TSystemMatrixType;
+    typedef typename BaseType::TSystemVectorType TSystemVectorType;
 
     PodModeReadingProcess(const std::string& filename) : BaseType()
     {
         this->ReadPrincipalComponents(mPhi, filename);
     }
 
-    void InitializeProjectionMatrix(Matrix& rPhi) override
+    void ApplyProjection(TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb) override
     {
-        if (rPhi.size1() != mPhi.size1() || rPhi.size2() != mPhi.size2())
-            rPhi.resize(mPhi.size1(), mPhi.size2(), false);
-        noalias(rPhi) = mPhi;
+        BaseType::ApplyProjection(mPhi, rA, rDx, rb);
     }
 
 private:
 
+    /**
+     * Read in the principal vectors stored in the data file
+     */
     void ReadPrincipalComponents(Matrix& Phi, const std::string& filename) const
     {
         std::ifstream file(filename, std::ios::binary);
@@ -68,9 +71,9 @@ private:
         file.close();
     }
 
-    Matrix mPhi;
+    Matrix mPhi; // projection matrix
 
-}; /* Class PodProcess */
+}; /* Class PodModeReadingProcess */
 
 }  /* namespace Kratos.*/
 

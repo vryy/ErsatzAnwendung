@@ -18,6 +18,7 @@
 #include "includes/define.h"
 #include "includes/model_part.h"
 #include "processes/process.h"
+#include "custom_utilities/pod_utils.h"
 
 
 namespace Kratos
@@ -26,6 +27,7 @@ namespace Kratos
 /**
  * This base class provides abstract functions for POD operations
  */
+template<class TSparseSpace, class TModelPart>
 class PodProcess : public Process
 {
 public:
@@ -33,8 +35,14 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION( PodProcess );
 
     typedef Process BaseType;
-    typedef ModelPart::DofsArrayType DofsArrayType;
+    typedef typename TModelPart::DofsArrayType DofsArrayType;
 
+    typedef typename TSparseSpace::MatrixType TSystemMatrixType;
+    typedef typename TSparseSpace::VectorType TSystemVectorType;
+
+    /**
+     * Default constructor
+     */
     PodProcess() : BaseType()
     {
     }
@@ -58,19 +66,74 @@ public:
     }
 
     /**
-     * Initialize the projection matrix
+     * Apply the projection matrix to the linear system
      */
-    virtual void InitializeProjectionMatrix(Matrix& rPhi)
-    {}
-
-    /**
-     * Compute the projection matrix
-     */
-    virtual void UpdateProjectionMatrix(Matrix& rPhi)
-    {}
+    virtual void ApplyProjection(TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb)
+    {
+        KRATOS_ERROR << "Calling base class function";
+    }
 
 protected:
 
+    /**
+     * Utility function to apply the projection on the linear system
+     */
+    template<typename TLocalSystemMatrixType>
+    static void ApplyProjection(TLocalSystemMatrixType& rPhi,
+        TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb)
+    {
+        const std::size_t rsize = rPhi.size2(); // size of reduced system
+
+        // construct the reduced linear system
+        TLocalSystemMatrixType Ared;
+        POD_Utils::VtKV(Ared, rPhi, rA);
+
+        TSystemVectorType bred(rsize);
+        noalias(bred) = prod(trans(rPhi), rb);
+
+        // solve the reduced linear system
+        TSystemVectorType xred(rsize);
+        int singular = POD_Utils::Solve(Ared, xred, bred);
+        if (singular)
+            KRATOS_ERROR << "The reduced system matrix is singular";
+
+        // project back the solution to full space
+        noalias(rDx) = prod(rPhi, xred);
+    }
+
+    /**
+     * Compute the principal components and vectors of the list of snapshots by means of SVD.
+     * On the output, the principal components are stored in S and the respective principal vectors
+     * on the column of matrix U.
+     */
+    template<typename TLocalSystemMatrixType, typename TLocalSystemVectorType>
+    static void ComputePrincipalComponents(const std::vector<TLocalSystemVectorType>& rSnapshot,
+        TLocalSystemMatrixType& U, TLocalSystemVectorType& S)
+    {
+        const std::size_t n = rSnapshot.size();
+        if (n > 0)
+        {
+            const std::size_t m = rSnapshot[0].size();
+            TLocalSystemMatrixType Q(m, n);
+
+            for (std::size_t i = 0; i < n; ++i)
+            {
+                noalias(column(Q, i)) = rSnapshot[i];
+            }
+
+            TLocalSystemMatrixType VT;
+            POD_Utils::SVD(Q, U, S, VT);
+        }
+        else
+        {
+            U.resize(0, 0, false);
+            S.resize(0, false);
+        }
+    }
+
+    /**
+     * Record the current values of the dof set into a vector
+     */
     Vector TakeSnapshot() const
     {
         const auto& DofSet = this->GetDofSet();

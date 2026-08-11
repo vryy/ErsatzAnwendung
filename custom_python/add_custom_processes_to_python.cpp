@@ -15,8 +15,11 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/model_part.h"
+#include "spaces/ublas_space.h"
+#include "linear_solvers/linear_solver.h"
 
-// builder_and_solvers
+// processes
 #include "custom_processes/pod_process.h"
 #include "custom_processes/snapshot_collecting_process.h"
 #include "custom_processes/pod_mode_reading_process.h"
@@ -32,15 +35,27 @@ using namespace boost::python;
 
 void ErsatzAnwendung_AddCustomProcessesToPython()
 {
-    class_<PodProcess, PodProcess::Pointer, bases<Process>, boost::noncopyable>("PodProcess")
+    typedef UblasSpace<KRATOS_DOUBLE_TYPE, CompressedMatrix, Vector> SparseSpaceType;
+    typedef UblasSpace<KRATOS_DOUBLE_TYPE, Matrix, Vector> LocalSpaceType;
+
+    typedef LinearSolver<SparseSpaceType, LocalSpaceType, ModelPart> LinearSolverType;
+
+    typedef PodProcess<SparseSpaceType, ModelPart> PodProcessType;
+
+    typedef SnapshotCollectingProcess<SparseSpaceType, LinearSolverType, ModelPart> SnapshotCollectingProcessType;
+
+    typedef PodModeReadingProcess<SparseSpaceType, ModelPart> PodModeReadingProcessType;
+
+    class_<PodProcessType, typename PodProcessType::Pointer, bases<Process>, boost::noncopyable>
+    ("PodProcess", init<>())
     ;
 
-    class_<SnapshotCollectingProcess, SnapshotCollectingProcess::Pointer, bases<PodProcess>, boost::noncopyable>
-    ("SnapshotCollectingProcess", init<>())
-    .def("SavePrincipalComponents", &SnapshotCollectingProcess::SavePrincipalComponents)
+    class_<SnapshotCollectingProcessType, typename SnapshotCollectingProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
+    ("SnapshotCollectingProcess", init<typename LinearSolverType::Pointer>())
+    .def("SavePrincipalComponents", &SnapshotCollectingProcessType::SavePrincipalComponents)
     ;
 
-    class_<PodModeReadingProcess, PodModeReadingProcess::Pointer, bases<PodProcess>, boost::noncopyable>
+    class_<PodModeReadingProcessType, typename PodModeReadingProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
     ("PodModeReadingProcess", init<const std::string&>())
     ;
 }

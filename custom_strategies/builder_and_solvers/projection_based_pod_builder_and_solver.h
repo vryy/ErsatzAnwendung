@@ -19,7 +19,6 @@
 #include "solving_strategies/builder_and_solvers/builder_and_solver.h"
 #include "custom_processes/pod_process.h"
 #include "custom_processes/snapshot_collecting_process.h"
-#include "custom_utilities/pod_utils.h"
 
 
 namespace Kratos
@@ -103,6 +102,8 @@ public:
 
     typedef typename MatrixVectorTypeSelector<TDataType>::ZeroVectorType ZeroVectorType;
 
+    typedef PodProcess<TSparseSpaceType, ModelPartType> PodProcessType;
+
     /*@} */
     /**@name Life Cycle
     */
@@ -113,7 +114,8 @@ public:
     ProjectionBasedPodBuilderAndSolver(typename TLinearSolverType::Pointer pLinearSystemSolver)
     : BaseType(pLinearSystemSolver)
     {
-        mpPodProcess = PodProcess::Pointer(new SnapshotCollectingProcess());
+        mpPodProcess = typename PodProcessType::Pointer(
+            new SnapshotCollectingProcess<TSparseSpaceType, TLinearSolverType, ModelPartType>(pLinearSystemSolver));
     }
 
     /** Destructor.
@@ -137,7 +139,6 @@ public:
 
         mpPodProcess->SetDofSet(BaseType::GetDofSet());
         mpPodProcess->ExecuteInitialize();
-        mpPodProcess->InitializeProjectionMatrix(mPhi);
     }
 
     void InitializeSolutionStep(
@@ -148,10 +149,7 @@ public:
     ) override
     {
         BaseType::InitializeSolutionStep(rModelPart, rA, rDx, rb);
-
-        // Update the projection matrix
         mpPodProcess->ExecuteInitializeSolutionStep();
-        mpPodProcess->UpdateProjectionMatrix(mPhi);
     }
 
     void BuildAndSolve(
@@ -173,23 +171,8 @@ public:
     {
         KRATOS_TRY
 
-        const std::size_t rsize = mPhi.size2(); // size of reduced system
-
-        // construct the reduced linear system
-        LocalSystemMatrixType Ared;
-        POD_Utils::VtKV(Ared, mPhi, rA);
-
-        LocalSystemVectorType bred(rsize);
-        noalias(bred) = prod(trans(mPhi), rb);
-
-        // solve the reduced linear system
-        LocalSystemVectorType xred(rsize);
-        int singular = POD_Utils::Solve(Ared, xred, bred);
-        if (singular)
-            KRATOS_ERROR << "The reduced system matrix is singular";
-
-        // project back the solution to full space
-        noalias(rDx) = prod(mPhi, xred);
+        // invoke the POD process to apply projection on the linear system
+        mpPodProcess->ApplyProjection(rA, rDx, rb);
 
         KRATOS_CATCH("")
     }
@@ -214,12 +197,12 @@ public:
     /**@name Access */
     /*@{ */
 
-    void SetPodProcess(PodProcess::Pointer pPodProcess)
+    void SetPodProcess(typename PodProcessType::Pointer pPodProcess)
     {
         mpPodProcess = pPodProcess;
     }
 
-    PodProcess::Pointer pGetPodProcess() const
+    typename PodProcessType::Pointer pGetPodProcess() const
     {
         return mpPodProcess;
     }
@@ -283,11 +266,7 @@ private:
     /**@name Member Variables */
     /*@{ */
 
-    typename BaseType::Pointer mpBuilderAndSolver; // the computing BuiderAndSolver
-
-    LocalSystemMatrixType mPhi; // the projection matrix
-
-    PodProcess::Pointer mpPodProcess;
+    typename PodProcessType::Pointer mpPodProcess;
 
     /*@} */
     /**@name Private Operators*/
