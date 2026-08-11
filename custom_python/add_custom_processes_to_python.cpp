@@ -22,7 +22,7 @@
 // processes
 #include "custom_processes/pod_process.h"
 #include "custom_processes/snapshot_collecting_process.h"
-#include "custom_processes/pod_mode_reading_process.h"
+#include "custom_processes/pod_projection_process.h"
 #include "custom_python/add_custom_processes_to_python.h"
 
 namespace Kratos
@@ -44,7 +44,7 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
 
     typedef SnapshotCollectingProcess<SparseSpaceType, LinearSolverType, ModelPart> SnapshotCollectingProcessType;
 
-    typedef PodModeReadingProcess<SparseSpaceType, ModelPart> PodModeReadingProcessType;
+    typedef PodProjectionProcess<SparseSpaceType, ModelPart> PodProjectionProcessType;
 
     class_<PodProcessType, typename PodProcessType::Pointer, bases<Process>, boost::noncopyable>
     ("PodProcess", init<>())
@@ -55,8 +55,8 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
     .def("SavePrincipalComponents", &SnapshotCollectingProcessType::SavePrincipalComponents)
     ;
 
-    class_<PodModeReadingProcessType, typename PodModeReadingProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
-    ("PodModeReadingProcess", init<const std::string&>())
+    class_<PodProjectionProcessType, typename PodProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
+    ("PodProjectionProcess", init<const std::string&>())
     ;
 }
 

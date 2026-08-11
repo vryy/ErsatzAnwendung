@@ -6,8 +6,8 @@
 //
 
 
-#if !defined(KRATOS_ERSATZ_ANWENDUNG_POD_MODE_READING_PROCESS_H_INCLUDED )
-#define  KRATOS_ERSATZ_ANWENDUNG_POD_MODE_READING_PROCESS_H_INCLUDED
+#if !defined(KRATOS_ERSATZ_ANWENDUNG_POD_PROJECTION_PROCESS_H_INCLUDED )
+#define  KRATOS_ERSATZ_ANWENDUNG_POD_PROJECTION_PROCESS_H_INCLUDED
 
 
 /* System includes */
@@ -22,20 +22,31 @@ namespace Kratos
 {
 
 /**
- * This process reads the POD mode from file
+ * This process applies POD mode via projection
  */
 template<class TSparseSpace, class TModelPart>
-class PodModeReadingProcess : public PodProcess<TSparseSpace, TModelPart>
+class PodProjectionProcess : public PodProcess<TSparseSpace, TModelPart>
 {
 public:
 
-    KRATOS_CLASS_POINTER_DEFINITION( PodModeReadingProcess );
+    KRATOS_CLASS_POINTER_DEFINITION( PodProjectionProcess );
 
     typedef PodProcess<TSparseSpace, TModelPart> BaseType;
     typedef typename BaseType::TSystemMatrixType TSystemMatrixType;
     typedef typename BaseType::TSystemVectorType TSystemVectorType;
 
-    PodModeReadingProcess(const std::string& filename) : BaseType()
+    /**
+     * Default constructor
+     */
+    PodProjectionProcess(const Matrix& rPhi)
+    : BaseType(), mPhi(rPhi)
+    {}
+
+    /**
+     * Constructor to obtain the POD modes from input file
+     */
+    PodProjectionProcess(const std::string& filename)
+    : BaseType()
     {
         this->ReadPrincipalComponents(mPhi, filename);
     }
@@ -73,8 +84,8 @@ private:
 
     Matrix mPhi; // projection matrix
 
-}; /* Class PodModeReadingProcess */
+}; /* Class PodProjectionProcess */
 
 }  /* namespace Kratos.*/
 
-#endif /* KRATOS_ERSATZ_ANWENDUNG_POD_MODE_READING_PROCESS_H_INCLUDED  defined */
+#endif /* KRATOS_ERSATZ_ANWENDUNG_POD_PROJECTION_PROCESS_H_INCLUDED  defined */
