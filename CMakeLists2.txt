@@ -8,13 +8,22 @@ set( KRATOS_ERSATZ_ANWENDUNG_SOURCES
 )
 
 # matio
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(matio IMPORTED_TARGET matio)
+find_package(matio CONFIG)
 if(matio_FOUND)
-    find_package(ZLIB REQUIRED)
-    find_package(HDF5 REQUIRED COMPONENTS C CXX HL)
-    target_link_libraries(PkgConfig::matio INTERFACE ZLIB::ZLIB)
-    target_link_libraries(PkgConfig::matio INTERFACE HDF5::HDF5)
+    get_target_property(MATIO_LINK_LIBS matio INTERFACE_LINK_LIBRARIES)
+
+    if(MATIO_LINK_LIBS MATCHES "ZLIB::ZLIB")
+        if(NOT TARGET ZLIB::ZLIB)
+            find_package(ZLIB REQUIRED)
+        endif()
+    endif()
+
+    if(MATIO_LINK_LIBS MATCHES "HDF5::HDF5")
+        if(NOT TARGET HDF5::HDF5)
+            find_package(HDF5 REQUIRED COMPONENTS C CXX HL)
+        endif()
+    endif()
+
     message(STATUS "ErsatzAnwendung uses matio")
 else()
     message(STATUS "ErsatzAnwendung does not use matio")
@@ -32,7 +41,7 @@ target_compile_definitions(KratosErsatzAnwendung PRIVATE ERSATZ_ANWENDUNG=EXPORT
 
 if(matio_FOUND)
     target_compile_definitions(KratosErsatzAnwendung PRIVATE ERSATZ_APP_USE_MATIO)
-    target_link_libraries(KratosErsatzAnwendung PRIVATE PkgConfig::matio)
+    target_link_libraries(KratosErsatzAnwendung PRIVATE matio)
 endif()
 
 set_target_properties(KratosErsatzAnwendung PROPERTIES PREFIX "")
