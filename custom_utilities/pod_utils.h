@@ -20,6 +20,10 @@
 #include <boost/numeric/bindings/traits/ublas_sparse.hpp>
 #include <boost/numeric/bindings/traits/ublas_vector.hpp>
 
+#ifdef ERSATZ_APP_USE_MATIO
+#include <matio.h>
+#endif
+
 /* Project includes */
 #include "includes/ublas_interface.h"
 
@@ -222,8 +226,122 @@ public:
         return singular;
     }
 
+#ifdef ERSATZ_APP_USE_MATIO
+    /// Read Matlab matrix stored in .mat file
+    static Matrix ReadMat(const std::string& filename,
+                          const std::string& var_name)
+    {
+        // 1. Open MAT file in Read-Only mode
+        mat_t* matfp = Mat_Open(filename.c_str(), MAT_ACC_RDONLY);
+        if (!matfp) {
+            KRATOS_ERROR << "Error opening file: " << filename;
+        }
+
+        // 2. Read variable metadata + data from file
+        matvar_t* matvar = Mat_VarRead(matfp, var_name.c_str());
+        if (!matvar) {
+            Mat_Close(matfp);
+            KRATOS_ERROR << "Variable '" << var_name << "' not found in file.";
+        }
+
+        // 3. Verify variable shape and type
+        if (matvar->rank != 2) {
+            Mat_VarFree(matvar);
+            Mat_Close(matfp);
+            KRATOS_ERROR << "Variable is not a 2D matrix.";
+        }
+
+        if (matvar->class_type != MAT_C_DOUBLE) {
+            Mat_VarFree(matvar);
+            Mat_Close(matfp);
+            KRATOS_ERROR << "Variable class type is not double.";
+        }
+
+        // Dimensions in MATLAB (Rows x Cols)
+        std::size_t rows = matvar->dims[0];
+        std::size_t cols = matvar->dims[1];
+
+        // 4. Access raw memory buffer
+        // matio stores double arrays as a contiguous column-major double*
+        const double* data_ptr = static_cast<const double*>(matvar->data);
+
+        // 5. Convert Column-Major raw buffer -> Row-Major Boost uBLAS Matrix
+        Matrix mat(rows, cols);
+        std::size_t idx = 0;
+        for (std::size_t c = 0; c < cols; ++c) {
+            for (std::size_t r = 0; r < rows; ++r) {
+                mat(r, c) = data_ptr[idx++];
+            }
+        }
+
+        // 6. Clean up pointers
+        Mat_VarFree(matvar);
+        Mat_Close(matfp);
+
+        return mat;
+    }
+
+    /// Write a matrix to Matlab's mat file. The output file can be loaded
+    /// directly in Matlab using load(filename)
+    static void WriteMat(const std::string& filename,
+                         const std::string& var_name,
+                         const Matrix& A)
+    {
+        const std::size_t m = A.size1();
+        const std::size_t n = A.size2();
+
+        std::vector<double> col_major_buffer;
+        col_major_buffer.reserve(m * n);
+
+        for (size_t col = 0; col < n; ++col) {
+            for (size_t row = 0; row < m; ++row) {
+                col_major_buffer.push_back(A(row, col));
+            }
+        }
+
+        WriteMat(filename, var_name, col_major_buffer, m, n);
+    }
+
+    /// Write a matrix to Matlab's mat file. The output file can be loaded
+    /// directly in Matlab using load(filename)
+    static void WriteMat(const std::string& filename,
+                         const std::string& var_name,
+                         const std::vector<double>& col_major_data, // Flattened matrix
+                         std::size_t rows,
+                         std::size_t cols)
+    {
+        // 1. Create MAT file (MAT_FT_MAT73 for v7.3 / HDF5, or MAT_FT_MAT5 for v5)
+        mat_t *matfp = Mat_CreateVer(filename.c_str(), NULL, MAT_FT_MAT73);
+        if (!matfp) {
+            KRATOS_ERROR << "Error creating MAT file\n";
+            return;
+        }
+
+        // 2. Define dimensions: [rows, cols]
+        std::vector<std::size_t> dims = {rows, cols};
+
+        // 3. Create MATLAB variable (Double precision, Column-major array)
+        matvar_t *matvar = Mat_VarCreate(
+            var_name.c_str(),
+            MAT_C_DOUBLE,
+            MAT_T_DOUBLE,
+            2,
+            dims.data(),
+            const_cast<double*>(col_major_data.data()),
+            0 // flags
+        );
+
+        // 4. Write variable and close file
+        Mat_VarWrite(matfp, matvar, MAT_COMPRESSION_NONE);
+        Mat_VarFree(matvar);
+        Mat_Close(matfp);
+
+        std::cout << "Successfully written Matlab's MAT-file\n";
+    }
+#endif
+
     /*@} */
-    /**@name Acces */
+    /**@name Access */
     /*@{ */
 
 

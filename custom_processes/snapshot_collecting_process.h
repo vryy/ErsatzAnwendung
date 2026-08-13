@@ -16,6 +16,7 @@
 
 /* Project includes */
 #include "custom_processes/pod_process.h"
+#include "custom_utilities/pod_utils.h"
 
 
 namespace Kratos
@@ -71,6 +72,22 @@ public:
 
         if (p > 0)
         {
+            #ifdef ERSATZ_APP_USE_MATIO
+
+            std::vector<double> col_major_buffer;
+            col_major_buffer.reserve(m * p);
+
+            for (size_t col = 0; col < p; ++col) {
+                for (size_t row = 0; row < m; ++row) {
+                    col_major_buffer.push_back(U(row, col));
+                }
+            }
+
+            const std::string variable_name = "Phi";
+            POD_Utils::WriteMat(filename, variable_name, col_major_buffer, m, p);
+
+            #else
+
             std::ofstream file(filename, std::ios::binary);
             file.write(reinterpret_cast<const char*>(&p), sizeof(p));
             file.write(reinterpret_cast<const char*>(&m), sizeof(m));
@@ -83,6 +100,8 @@ public:
             }
 
             file.close();
+
+            #endif
         }
     }
 

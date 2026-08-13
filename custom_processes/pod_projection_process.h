@@ -16,6 +16,7 @@
 
 /* Project includes */
 #include "custom_processes/pod_process.h"
+#include "custom_utilities/pod_utils.h"
 
 
 namespace Kratos
@@ -48,7 +49,7 @@ public:
     PodProjectionProcess(const std::string& filename)
     : BaseType()
     {
-        this->ReadPrincipalComponents(mPhi, filename);
+        this->ReadPrincipalComponents(mPhi, filename, "Phi");
     }
 
     void ApplyProjection(TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb) override
@@ -61,8 +62,14 @@ private:
     /**
      * Read in the principal vectors stored in the data file
      */
-    void ReadPrincipalComponents(Matrix& Phi, const std::string& filename) const
+    void ReadPrincipalComponents(Matrix& Phi, const std::string& filename, const std::string& dataset_name) const
     {
+        #ifdef ERSATZ_APP_USE_MATIO
+
+        Phi = POD_Utils::ReadMat(filename, dataset_name);
+
+        #else
+
         std::ifstream file(filename, std::ios::binary);
 
         std::size_t number_of_modes, m;
@@ -80,6 +87,8 @@ private:
         }
 
         file.close();
+
+        #endif
     }
 
     Matrix mPhi; // projection matrix
