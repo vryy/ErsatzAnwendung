@@ -86,32 +86,6 @@ public:
 protected:
 
     /**
-     * Utility function to apply the projection on the linear system
-     */
-    template<typename TLocalSystemMatrixType>
-    static void ApplyProjection(TLocalSystemMatrixType& rPhi,
-        TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb)
-    {
-        const std::size_t rsize = rPhi.size2(); // size of reduced system
-
-        // construct the reduced linear system
-        TLocalSystemMatrixType Ared;
-        POD_Utils::VtKV(Ared, rPhi, rA);
-
-        TSystemVectorType bred(rsize);
-        noalias(bred) = prod(trans(rPhi), rb);
-
-        // solve the reduced linear system
-        TSystemVectorType xred(rsize);
-        int singular = POD_Utils::Solve(Ared, xred, bred);
-        if (singular)
-            KRATOS_ERROR << "The reduced system matrix is singular";
-
-        // project back the solution to full space
-        noalias(rDx) = prod(rPhi, xred);
-    }
-
-    /**
      * Compute the principal components and vectors of the list of snapshots by means of SVD.
      * On the output, the principal components are stored in S and the respective principal vectors
      * on the column of matrix U.
@@ -139,6 +113,38 @@ protected:
             U.resize(0, 0, false);
             S.resize(0, false);
         }
+    }
+
+    /**
+     * Read in the principal vectors stored in the data file
+     */
+    void ReadPrincipalComponents(Matrix& Phi, const std::string& filename, const std::string& dataset_name) const
+    {
+#ifdef ERSATZ_APP_USE_MATIO
+
+        Phi = POD_Utils::ReadMat(filename, dataset_name);
+
+#else
+
+        std::ifstream file(filename, std::ios::binary);
+
+        std::size_t number_of_modes, m;
+        file.read(reinterpret_cast<char*>(&number_of_modes), sizeof(number_of_modes));
+        file.read(reinterpret_cast<char*>(&m), sizeof(m));
+
+        Phi.resize(m, number_of_modes, false);
+
+        for (std::size_t i = 0; i < number_of_modes; ++i)
+        {
+            Vector T(m);
+            file.read(reinterpret_cast<char*>(&T[0]), T.size() * sizeof(double));
+
+            noalias(column(Phi, i)) = T;
+        }
+
+        file.close();
+
+#endif
     }
 
     /**

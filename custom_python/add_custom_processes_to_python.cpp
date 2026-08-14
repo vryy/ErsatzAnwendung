@@ -22,7 +22,8 @@
 // processes
 #include "custom_processes/pod_process.h"
 #include "custom_processes/snapshot_collecting_process.h"
-#include "custom_processes/pod_projection_process.h"
+#include "custom_processes/rayleigh_ritz_projection_process.h"
+#include "custom_processes/petrov_galerkin_projection_process.h"
 #include "custom_python/add_custom_processes_to_python.h"
 
 namespace Kratos
@@ -44,7 +45,8 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
 
     typedef SnapshotCollectingProcess<SparseSpaceType, LocalSpaceType, ModelPart> SnapshotCollectingProcessType;
 
-    typedef PodProjectionProcess<SparseSpaceType, LocalSpaceType, ModelPart> PodProjectionProcessType;
+    typedef RayleighRitzProjectionProcess<SparseSpaceType, LocalSpaceType, ModelPart> RayleighRitzProjectionProcessType;
+    typedef PetrovGalerkinProjectionProcess<SparseSpaceType, LocalSpaceType, ModelPart> PetrovGalerkinProjectionProcessType;
 
     class_<PodProcessType, typename PodProcessType::Pointer, bases<Process, LinearSolverType>, boost::noncopyable>
     ("PodProcess", init<>())
@@ -55,8 +57,12 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
     .def("SavePrincipalComponents", &SnapshotCollectingProcessType::SavePrincipalComponents)
     ;
 
-    class_<PodProjectionProcessType, typename PodProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
-    ("PodProjectionProcess", init<const std::string&>())
+    class_<RayleighRitzProjectionProcessType, typename RayleighRitzProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
+    ("RayleighRitzProjectionProcess", init<const std::string&>())
+    ;
+
+    class_<PetrovGalerkinProjectionProcessType, typename PetrovGalerkinProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
+    ("PetrovGalerkinProjectionProcess", init<const std::string&, const std::string&>())
     ;
 }
 

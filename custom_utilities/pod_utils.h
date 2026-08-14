@@ -167,11 +167,11 @@ public:
     }
 
     /// Perform triple matrix multiplication for POD-FEM simulation
-    /// A = V^t K V
-    /// V shall be a dense matrix coming from SVD and K is the unreduced stiffness matrix of the system
-    static void VtKV(Matrix& rA, const Matrix& rV, const CompressedMatrix& rK)
+    /// A = W^t K V
+    /// W and V shall be dense matrices coming from SVD and K is the unreduced stiffness matrix of the system
+    static void WtKV(Matrix& rA, const Matrix& rW, const CompressedMatrix& rK, const Matrix& rV)
     {
-        const std::size_t fsize = rV.size1(); // full size
+        const std::size_t fsize = rW.size1(); // full size
         const std::size_t rsize = rV.size2(); // reduced size
 
         if (rK.size1() != fsize)
@@ -186,18 +186,18 @@ public:
 
         // ABC = a_ij x b_jk x c_kl
         std::size_t k, nz;
-        for(std::size_t l = 0; l < rsize; ++l)
+        for (std::size_t l = 0; l < rsize; ++l)
         {
-            for(std::size_t j = 0; j < fsize; ++j)
+            for (std::size_t j = 0; j < fsize; ++j)
             {
-                nz = rK.index1_data()[j+1] - rK.index1_data()[j]; // do we need to make check here?
-                for(std::size_t inz = 0; inz < nz; ++inz)
+                nz = rK.index1_data()[j + 1] - rK.index1_data()[j]; // do we need to make check here?
+                for (std::size_t inz = 0; inz < nz; ++inz)
                 {
                     k = rK.index2_data()[rK.index1_data()[j] + inz];
                     const double val = values[rK.index1_data()[j] + inz];
-                    for(std::size_t i = 0; i < rsize; ++i)
+                    for (std::size_t i = 0; i < rsize; ++i)
                     {
-                        rA(i, l) += rV(j, i) * val * rV(k, l);
+                        rA(i, l) += rW(j, i) * val * rV(k, l);
                     }
                 }
             }
