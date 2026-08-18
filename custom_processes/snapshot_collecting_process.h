@@ -23,7 +23,7 @@ namespace Kratos
 {
 
 /**
- * This process only collects the snapshot and computing the POD basis after the simulation ends
+ * This process collects the snapshot of the dof set and computing the POD basis after the simulation ends
  */
 template<class TSparseSpace, class TDenseSpace, class TModelPart>
 class SnapshotCollectingProcess : public PodProcess<TSparseSpace, TDenseSpace, TModelPart>
@@ -59,6 +59,27 @@ public:
     }
 
     /**
+      * Compute the principal components and vectors via SVD and save it to the file
+      */
+    Matrix GetPrincipalComponents(const std::size_t number_of_modes) const
+    {
+        Matrix U;
+        Vector S;
+        BaseType::ComputePrincipalComponents(mSnapshot, U, S);
+
+        const std::size_t m = U.size1();
+        const std::size_t k = std::min(mSnapshot.size(), number_of_modes);
+
+        Matrix Phi(m, k);
+        for (size_t col = 0; col < k; ++col) {
+            for (size_t row = 0; row < m; ++row) {
+                Phi(row, col) = U(row, col);
+            }
+        }
+        return Phi;
+    }
+
+    /**
      * Compute the principal components and vectors via SVD and save it to the file
      */
     void SavePrincipalComponents(const std::string& filename, const std::size_t number_of_modes) const
@@ -68,32 +89,32 @@ public:
         BaseType::ComputePrincipalComponents(mSnapshot, U, S);
 
         const std::size_t m = U.size1();
-        const std::size_t p = std::min(mSnapshot.size(), number_of_modes);
+        const std::size_t k = std::min(mSnapshot.size(), number_of_modes);
 
-        if (p > 0)
+        if (k > 0)
         {
             #ifdef ERSATZ_APP_USE_MATIO
 
             std::vector<double> col_major_buffer;
-            col_major_buffer.reserve(m * p);
+            col_major_buffer.reserve(m * k);
 
-            for (size_t col = 0; col < p; ++col) {
+            for (size_t col = 0; col < k; ++col) {
                 for (size_t row = 0; row < m; ++row) {
                     col_major_buffer.push_back(U(row, col));
                 }
             }
 
             const std::string variable_name = "Phi";
-            POD_Utils::WriteMat(filename, variable_name, col_major_buffer, m, p);
+            POD_Utils::WriteMat(filename, variable_name, col_major_buffer, m, k);
 
             #else
 
             std::ofstream file(filename, std::ios::binary);
-            file.write(reinterpret_cast<const char*>(&p), sizeof(p));
+            file.write(reinterpret_cast<const char*>(&k), sizeof(k));
             file.write(reinterpret_cast<const char*>(&m), sizeof(m));
 
             Vector T(m);
-            for (std::size_t i = 0; i < p; ++i)
+            for (std::size_t i = 0; i < k; ++i)
             {
                 noalias(T) = column(U, i);
                 file.write(reinterpret_cast<const char*>(&T[0]), T.size() * sizeof(double));
@@ -105,9 +126,15 @@ public:
         }
     }
 
+    /// Accessor for the snapshot collected during the simulation
+    const std::vector<Vector>& GetSnapshot() const
+    {
+        return mSnapshot;
+    }
+
 private:
 
-    std::vector<Vector> mSnapshot;
+    std::vector<Vector> mSnapshot = {};
     typename TLinearSolver::Pointer mpLinearSystemSolver;
 
 }; /* Class SnapshotCollectingProcess */

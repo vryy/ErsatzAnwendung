@@ -27,8 +27,8 @@
 /* Project includes */
 #include "includes/ublas_interface.h"
 
-
 // template for LAPACK function
+#ifdef KRATOS_USE_BLAS_LAPACK
 extern "C" void dgesvd_(char* JOBU,
              char* JOBVT,
              int* M,
@@ -43,6 +43,7 @@ extern "C" void dgesvd_(char* JOBU,
              double* WORK,
              int* LWORK,
              int* INFO);
+#endif
 
 namespace Kratos
 {
@@ -55,6 +56,33 @@ namespace Kratos
 /**@name Type Definitions */
 /*@{ */
 
+#ifdef ERSATZ_APP_USE_MATIO
+
+template<typename TDataType>
+struct MatIoTypeHelper {};
+
+template<>
+struct MatIoTypeHelper<double>
+{
+    static const auto MatlabClassType = MAT_C_DOUBLE;
+    static const auto MatlabDataType = MAT_T_DOUBLE;
+};
+
+template<>
+struct MatIoTypeHelper<int>
+{
+    static const auto MatlabClassType = MAT_C_INT32;
+    static const auto MatlabDataType = MAT_T_INT32;
+};
+
+template<>
+struct MatIoTypeHelper<long>
+{
+    static const auto MatlabClassType = MAT_C_INT64;
+    static const auto MatlabDataType = MAT_T_INT64;
+};
+
+#endif
 
 /*@} */
 
@@ -113,6 +141,7 @@ public:
     /// U and VT are orthogonal; S is descending
     static int SVD(const Matrix& rA, Matrix& rU, Vector& rS, Matrix& rVT)
     {
+#ifdef KRATOS_USE_BLAS_LAPACK
         char JOBU = 'A';
         char JOBVT = 'A';
 
@@ -164,6 +193,9 @@ public:
                 rVT(i, j) = VT[j*LDVT + i];
 
         return INFO;
+#else
+        KRATOS_ERROR << "Lapack is needed for SVD";
+#endif
     }
 
     /// Perform triple matrix multiplication for POD-FEM simulation
@@ -227,10 +259,53 @@ public:
     }
 
 #ifdef ERSATZ_APP_USE_MATIO
-    /// Read Matlab matrix stored in .mat file
-    static Matrix ReadMat(const std::string& filename,
-                          const std::string& var_name)
+    ///  List all the variables in the mat file
+    static void ListVariables(const std::string& filename)
     {
+        // 1. Open MAT file in Read-Only mode
+        mat_t* matfp = Mat_Open(filename.c_str(), MAT_ACC_RDONLY);
+        if (!matfp) {
+            KRATOS_ERROR << "Error opening file: " << filename;
+        }
+
+        // Force pointer back to first variable
+        Mat_Rewind(matfp);
+
+        std::cout << "\nListing variables in '" << filename << "':\n";
+        std::cout << "--------------------------------------------------\n";
+        std::cout << "Name\t\tType\t\tDimensions\n";
+        std::cout << "--------------------------------------------------\n";
+
+        matvar_t* matvar = nullptr;
+
+        // 2. Loop through variable headers using Mat_VarReadNextInfo
+        while ((matvar = Mat_VarReadNextInfo(matfp)) != nullptr) {
+            std::cout << matvar->name << "\t\t";
+            std::cout << get_matlab_class_string(matvar->class_type) << "\t\t";
+
+            // Print dimensions (e.g. 10x20)
+            for (int i = 0; i < matvar->rank; ++i) {
+                std::cout << matvar->dims[i] << (i < matvar->rank - 1 ? "x" : "");
+            }
+            std::cout << "\n";
+
+            // 3. Free header metadata memory before reading next
+            Mat_VarFree(matvar);
+        }
+
+        // 4. Close file handle
+        Mat_Close(matfp);
+    }
+
+    /// Read Matlab matrix stored in .mat file
+    /// It is noted that the variable must be saved using v7.3 format, .e.g,
+    /// > save('ew.mat','x',"-v7.3")
+    template<typename TMatrixType>
+    static TMatrixType ReadMat(const std::string& filename,
+                               const std::string& var_name)
+    {
+        typedef typename TMatrixType::value_type DataType;
+
         // 1. Open MAT file in Read-Only mode
         mat_t* matfp = Mat_Open(filename.c_str(), MAT_ACC_RDONLY);
         if (!matfp) {
@@ -251,10 +326,10 @@ public:
             KRATOS_ERROR << "Variable is not a 2D matrix.";
         }
 
-        if (matvar->class_type != MAT_C_DOUBLE) {
+        if (matvar->class_type != MatIoTypeHelper<DataType>::MatlabClassType) {
             Mat_VarFree(matvar);
             Mat_Close(matfp);
-            KRATOS_ERROR << "Variable class type is not double.";
+            KRATOS_ERROR << "Variable class type and matrix type is not compatible.";
         }
 
         // Dimensions in MATLAB (Rows x Cols)
@@ -263,10 +338,10 @@ public:
 
         // 4. Access raw memory buffer
         // matio stores double arrays as a contiguous column-major double*
-        const double* data_ptr = static_cast<const double*>(matvar->data);
+        const DataType* data_ptr = static_cast<const DataType*>(matvar->data);
 
         // 5. Convert Column-Major raw buffer -> Row-Major Boost uBLAS Matrix
-        Matrix mat(rows, cols);
+        TMatrixType mat(rows, cols);
         std::size_t idx = 0;
         for (std::size_t c = 0; c < cols; ++c) {
             for (std::size_t r = 0; r < rows; ++r) {
@@ -281,11 +356,44 @@ public:
         return mat;
     }
 
+    /// Read Matlab vector stored in .mat file
+    template<typename TVectorType>
+    static TVectorType ReadVec(const std::string& filename,
+                               const std::string& var_name)
+    {
+        typedef typename TVectorType::value_type DataType;
+        typedef typename MatrixVectorTypeSelector<DataType>::MatrixType MatrixType;
+
+        MatrixType mat = ReadMat<MatrixType>(filename, var_name);
+        if (mat.size1() != 1 && mat.size2() != 1) {
+            std::cout << "Variable '" << var_name << "' is not a vector.";
+            return Vector();
+        }
+
+        if (mat.size1() == 1) {
+            // Row vector
+            TVectorType vec(mat.size2());
+            for (std::size_t j = 0; j < mat.size2(); ++j) {
+                vec(j) = mat(0, j);
+            }
+            return vec;
+        }
+        else {
+            // Column vector
+            TVectorType vec(mat.size1());
+            for (std::size_t i = 0; i < mat.size1(); ++i) {
+                vec(i) = mat(i, 0);
+            }
+            return vec;
+        }
+    }
+
     /// Write a matrix to Matlab's mat file. The output file can be loaded
     /// directly in Matlab using load(filename)
     static void WriteMat(const std::string& filename,
                          const std::string& var_name,
-                         const Matrix& A)
+                         const Matrix& A,
+                         bool append)
     {
         const std::size_t m = A.size1();
         const std::size_t n = A.size2();
@@ -299,19 +407,81 @@ public:
             }
         }
 
-        WriteMat(filename, var_name, col_major_buffer, m, n);
+        WriteMat(filename, var_name, col_major_buffer, m, n, append);
+    }
+
+    /// Write a vector to Matlab's mat file. The output file can be loaded
+    /// directly in Matlab using load(filename)
+    static void WriteVec(const std::string& filename,
+        const std::string& var_name,
+        const Vector& b,
+        bool append)
+    {
+        const std::size_t m = b.size();
+
+        std::vector<double> col_major_buffer;
+        col_major_buffer.reserve(m);
+
+        for (size_t row = 0; row < m; ++row) {
+            col_major_buffer.push_back(b(row));
+        }
+
+        WriteMat(filename, var_name, col_major_buffer, m, 1, append);
+    }
+
+    /// Write an integer vector to Matlab's mat file. The output file can be loaded
+    /// directly in Matlab using load(filename)
+    static void WriteIntegerVec(const std::string& filename,
+        const std::string& var_name,
+        const MatrixVectorTypeSelector<int>::VectorType& b,
+        bool append)
+    {
+        const std::size_t m = b.size();
+
+        std::vector<int> col_major_buffer;
+        col_major_buffer.reserve(m);
+
+        for (size_t row = 0; row < m; ++row) {
+            col_major_buffer.push_back(b(row));
+        }
+
+        WriteMat(filename, var_name, col_major_buffer, m, 1, append);
     }
 
     /// Write a matrix to Matlab's mat file. The output file can be loaded
     /// directly in Matlab using load(filename)
+    template<typename TDataType>
     static void WriteMat(const std::string& filename,
                          const std::string& var_name,
-                         const std::vector<double>& col_major_data, // Flattened matrix
+                         const std::vector<TDataType>& col_major_data, // Flattened matrix
                          std::size_t rows,
-                         std::size_t cols)
+                         std::size_t cols,
+                         bool append = false)
     {
         // 1. Create MAT file (MAT_FT_MAT73 for v7.3 / HDF5, or MAT_FT_MAT5 for v5)
-        mat_t *matfp = Mat_CreateVer(filename.c_str(), NULL, MAT_FT_MAT73);
+        mat_t* matfp = nullptr;
+        if (append)
+        {
+            std::ifstream check_file(filename.c_str());
+            bool file_exists = check_file.good();
+            check_file.close();
+
+            if (file_exists)
+            {
+                // if the file exists, open it in read-write mode to append
+                matfp = Mat_Open(filename.c_str(), MAT_ACC_RDWR);
+            }
+            else
+            {
+                // if the file does not exist, create a new MAT file
+                matfp = Mat_CreateVer(filename.c_str(), NULL, MAT_FT_MAT73);
+            }
+        }
+        else
+        {
+            // create a new MAT file (overwrites if exists)
+            matfp = Mat_CreateVer(filename.c_str(), NULL, MAT_FT_MAT73);
+        }
         if (!matfp) {
             KRATOS_ERROR << "Error creating MAT file\n";
             return;
@@ -320,14 +490,14 @@ public:
         // 2. Define dimensions: [rows, cols]
         std::vector<std::size_t> dims = {rows, cols};
 
-        // 3. Create MATLAB variable (Double precision, Column-major array)
+        // 3. Create MATLAB variable (Column-major array)
         matvar_t *matvar = Mat_VarCreate(
             var_name.c_str(),
-            MAT_C_DOUBLE,
-            MAT_T_DOUBLE,
+            MatIoTypeHelper<TDataType>::MatlabClassType,
+            MatIoTypeHelper<TDataType>::MatlabDataType,
             2,
             dims.data(),
-            const_cast<double*>(col_major_data.data()),
+            col_major_data.data(),
             0 // flags
         );
 
@@ -336,7 +506,8 @@ public:
         Mat_VarFree(matvar);
         Mat_Close(matfp);
 
-        std::cout << "Successfully written Matlab's MAT-file\n";
+        std::cout << "Successfully written " << var_name << " to Matlab's MAT-file"
+                  << " " << filename << std::endl;
     }
 #endif
 
@@ -378,7 +549,7 @@ private:
 
 
     /*@} */
-    /**@name Private  Acces */
+    /**@name Private  Access */
     /*@{ */
 
 
@@ -386,6 +557,27 @@ private:
     /**@name Private Inquiry */
     /*@{ */
 
+#ifdef ERSATZ_APP_USE_MATIO
+    // Helper to convert matio enum types to readable strings
+    static std::string get_matlab_class_string(enum matio_classes class_type) {
+        switch (class_type) {
+        case MAT_C_DOUBLE:   return "double";
+        case MAT_C_SINGLE:   return "single";
+        case MAT_C_INT8:     return "int8";
+        case MAT_C_UINT8:    return "uint8";
+        case MAT_C_INT16:    return "int16";
+        case MAT_C_UINT16:   return "uint16";
+        case MAT_C_INT32:    return "int32";
+        case MAT_C_UINT32:   return "uint32";
+        case MAT_C_INT64:    return "int64";
+        case MAT_C_UINT64:   return "uint64";
+        case MAT_C_CHAR:     return "char / string";
+        case MAT_C_STRUCT:   return "struct";
+        case MAT_C_CELL:     return "cell";
+        default:             return "unknown / complex";
+        }
+    }
+#endif
 
     /*@} */
     /**@name Un accessible methods */

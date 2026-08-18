@@ -37,10 +37,14 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION( PodProcess );
 
     typedef Process BaseType;
+    typedef typename TModelPart ModelPartType;
     typedef typename TModelPart::DofsArrayType DofsArrayType;
 
     typedef typename TSparseSpace::MatrixType TSystemMatrixType;
     typedef typename TSparseSpace::VectorType TSystemVectorType;
+
+    typedef typename TDenseSpace::MatrixType LocalSystemMatrixType;
+    typedef typename TDenseSpace::VectorType LocalSystemVectorType;
 
     typedef LinearSolver<TSparseSpace, TDenseSpace, TModelPart> TLinearSolver;
 
@@ -49,6 +53,24 @@ public:
      */
     PodProcess() : BaseType()
     {
+    }
+
+    /**
+     * Assign the model part
+     */
+    void SetModelPart(const ModelPartType& rModelPart)
+    {
+        mpModelPart = &rModelPart;
+    }
+
+    /**
+     * Get the model part
+     */
+    const ModelPartType& GetModelPart() const
+    {
+        if (mpModelPart == nullptr)
+            KRATOS_ERROR << "Model part is not assigned";
+        return *mpModelPart;
     }
 
     /**
@@ -122,7 +144,7 @@ protected:
     {
 #ifdef ERSATZ_APP_USE_MATIO
 
-        Phi = POD_Utils::ReadMat(filename, dataset_name);
+        Phi = POD_Utils::ReadMat<Matrix>(filename, dataset_name);
 
 #else
 
@@ -168,6 +190,7 @@ protected:
 private:
 
     const DofsArrayType* mpDofSet = nullptr;
+    const ModelPartType* mpModelPart = nullptr;
 
 }; /* Class PodProcess */
 

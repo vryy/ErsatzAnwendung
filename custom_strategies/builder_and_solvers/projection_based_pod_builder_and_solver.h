@@ -139,6 +139,7 @@ public:
     {
         BaseType::SetUpSystem(rModelPart);
 
+        mpPodProcess->SetModelPart(rModelPart);
         mpPodProcess->SetDofSet(BaseType::GetDofSet());
         mpPodProcess->ExecuteInitialize();
     }

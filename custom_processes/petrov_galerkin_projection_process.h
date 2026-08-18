@@ -44,17 +44,6 @@ public:
     : BaseType(), mPhiL(rPhiL), mPhiR(rPhiR)
     {}
 
-    /**
-     * Constructor to obtain the POD modes from input file
-     */
-    PetrovGalerkinProjectionProcess(const std::string& filename1, const std::string& filename2)
-    : BaseType()
-    {
-        BaseType::ReadPrincipalComponents(mPhiL, filename1, "Phi");
-        BaseType::ReadPrincipalComponents(mPhiR, filename2, "Phi");
-        std::cout << "POD projection matrix read from file: " << filename1 << " and " << filename2 << std::endl;
-    }
-
     void ApplyProjection(TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb) override
     {
         ApplyProjection(mPhiL, mPhiR, rA, rDx, rb);

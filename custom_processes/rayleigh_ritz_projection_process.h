@@ -43,16 +43,6 @@ public:
     : BaseType(), mPhi(rPhi)
     {}
 
-    /**
-     * Constructor to obtain the POD modes from input file
-     */
-    RayleighRitzProjectionProcess(const std::string& filename)
-    : BaseType()
-    {
-        BaseType::ReadPrincipalComponents(mPhi, filename, "Phi");
-        std::cout << "POD projection matrix read from file: " << filename << std::endl;
-    }
-
     void ApplyProjection(TSystemMatrixType& rA, TSystemVectorType& rDx, TSystemVectorType& rb) override
     {
         ApplyProjection(mPhi, rA, rDx, rb);

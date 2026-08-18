@@ -22,6 +22,7 @@
 // processes
 #include "custom_processes/pod_process.h"
 #include "custom_processes/snapshot_collecting_process.h"
+#include "custom_processes/ecsw_snapshot_collecting_process.h"
 #include "custom_processes/rayleigh_ritz_projection_process.h"
 #include "custom_processes/petrov_galerkin_projection_process.h"
 #include "custom_python/add_custom_processes_to_python.h"
@@ -34,6 +35,19 @@ namespace Python
 
 using namespace boost::python;
 
+template<class TProcessType>
+boost::python::dict EcswSnapshotCollectingProcess_ConstructSystem(TProcessType& self,
+    Matrix& rG, Vector& rb, std::size_t number_of_modes)
+{
+    typedef typename TProcessType::IndexType IndexType;
+    std::map<IndexType, IndexType> element_weight_index;
+    self.ConstructSystem(rG, rb, element_weight_index, number_of_modes);
+    boost::python::dict result;
+    for (auto it = element_weight_index.begin(); it != element_weight_index.end(); ++it)
+        result[it->first] = it->second;
+    return result;
+}
+
 void ErsatzAnwendung_AddCustomProcessesToPython()
 {
     typedef UblasSpace<KRATOS_DOUBLE_TYPE, CompressedMatrix, Vector> SparseSpaceType;
@@ -44,6 +58,7 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
     typedef PodProcess<SparseSpaceType, LocalSpaceType, ModelPart> PodProcessType;
 
     typedef SnapshotCollectingProcess<SparseSpaceType, LocalSpaceType, ModelPart> SnapshotCollectingProcessType;
+    typedef EcswSnapshotCollectingProcess<SparseSpaceType, LocalSpaceType, ModelPart> EcswSnapshotCollectingProcessType;
 
     typedef RayleighRitzProjectionProcess<SparseSpaceType, LocalSpaceType, ModelPart> RayleighRitzProjectionProcessType;
     typedef PetrovGalerkinProjectionProcess<SparseSpaceType, LocalSpaceType, ModelPart> PetrovGalerkinProjectionProcessType;
@@ -54,15 +69,21 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
 
     class_<SnapshotCollectingProcessType, typename SnapshotCollectingProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
     ("SnapshotCollectingProcess", init<typename LinearSolverType::Pointer>())
+    .def("GetPrincipalComponents", &SnapshotCollectingProcessType::GetPrincipalComponents)
     .def("SavePrincipalComponents", &SnapshotCollectingProcessType::SavePrincipalComponents)
     ;
 
+    class_<EcswSnapshotCollectingProcessType, typename EcswSnapshotCollectingProcessType::Pointer, bases<SnapshotCollectingProcessType>, boost::noncopyable>
+    ("EcswSnapshotCollectingProcess", init<typename LinearSolverType::Pointer>())
+    .def("ConstructSystem", &EcswSnapshotCollectingProcess_ConstructSystem<EcswSnapshotCollectingProcessType>)
+    ;
+
     class_<RayleighRitzProjectionProcessType, typename RayleighRitzProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
-    ("RayleighRitzProjectionProcess", init<const std::string&>())
+    ("RayleighRitzProjectionProcess", init<const Matrix&>())
     ;
 
     class_<PetrovGalerkinProjectionProcessType, typename PetrovGalerkinProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
-    ("PetrovGalerkinProjectionProcess", init<const std::string&, const std::string&>())
+    ("PetrovGalerkinProjectionProcess", init<const Matrix&, const Matrix&>())
     ;
 }
 

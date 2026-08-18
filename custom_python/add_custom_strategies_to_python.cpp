@@ -22,6 +22,7 @@
 #include "solving_strategies/builder_and_solvers/builder_and_solver.h"
 #include "solving_strategies/builder_and_solvers/residualbased_elimination_builder_and_solver_deactivation.h"
 #include "custom_strategies/builder_and_solvers/projection_based_pod_builder_and_solver.h"
+#include "custom_strategies/schemes/element_weighting_scheme.h"
 #include "custom_utilities/projection_based_pod_builder_and_solver_factory.h"
 #include "custom_python/add_custom_strategies_to_python.h"
 
@@ -42,9 +43,13 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
 
     typedef BuilderAndSolver<SparseSpaceType, LocalSpaceType, LinearSolverType, ModelPart> BuilderAndSolverType;
 
+    typedef Scheme<SparseSpaceType, LocalSpaceType, ModelPart> SchemeType;
+
     typedef ResidualBasedEliminationBuilderAndSolverDeactivation<SparseSpaceType, LocalSpaceType, LinearSolverType, ModelPart> ResidualBasedEliminationBuilderAndSolverDeactivationType;
 
     typedef ProjectionBasedPodBuilderAndSolver<ResidualBasedEliminationBuilderAndSolverDeactivationType> ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType;
+
+    typedef ElementWeightingScheme<SparseSpaceType, LocalSpaceType, ModelPart> ElementWeightingSchemeType;
 
     //********************************************************************
     //********************************************************************
@@ -54,17 +59,26 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
             bases<BuilderAndSolverType>, boost::noncopyable > (
                 "ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivation",
                 init<typename LinearSolverType::Pointer>()
-        )
+            )
     .def("SetPodProcess", &ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType::SetPodProcess)
     .def("GetPodProcess", &ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType::pGetPodProcess)
     ;
 
     //********************************************************************
     //********************************************************************
+
     class_<ProjectionBasedPodBuilderAndSolverFactory, ProjectionBasedPodBuilderAndSolverFactory::Pointer, boost::noncopyable>
     ("ProjectionBasedPodBuilderAndSolverFactory", init<>())
     .def("Create", &ProjectionBasedPodBuilderAndSolverFactory::Create<ResidualBasedEliminationBuilderAndSolverDeactivationType>)
     .staticmethod("Create");
+    ;
+
+    //********************************************************************
+    //********************************************************************
+
+    class_<ElementWeightingSchemeType, ElementWeightingSchemeType::Pointer, bases<SchemeType>, boost::noncopyable>
+    ("ElementWeightingScheme", init<typename SchemeType::Pointer>())
+    .def("SetElementWeight", &ElementWeightingSchemeType::SetElementWeight)
     ;
 }
 
