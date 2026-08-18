@@ -21,6 +21,7 @@ namespace Kratos
 
     // constructor
     KratosErsatzAnwendung::KratosErsatzAnwendung()
+        : KratosApplication("ErsatzAnwendung")
     {}
 
     // register the application to the Kratos kernel
