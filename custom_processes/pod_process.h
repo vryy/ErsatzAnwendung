@@ -37,7 +37,7 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION( PodProcess );
 
     typedef Process BaseType;
-    typedef typename TModelPart ModelPartType;
+    typedef TModelPart ModelPartType;
     typedef typename TModelPart::DofsArrayType DofsArrayType;
 
     typedef typename TSparseSpace::MatrixType TSystemMatrixType;

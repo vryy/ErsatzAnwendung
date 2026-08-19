@@ -40,10 +40,16 @@ public:
     typedef typename BaseType::TSparseSpaceType TSparseSpaceType;
     typedef typename BaseType::TDenseSpaceType TDenseSpaceType;
 
+    typedef typename BaseType::LocalSystemMatrixType LocalSystemMatrixType;
+    typedef typename BaseType::LocalSystemVectorType LocalSystemVectorType;
+
     typedef typename TSparseSpaceType::IndexType IndexType;
     typedef typename BaseType::ModelPartType ModelPartType;
+    typedef typename BaseType::ElementType ElementType;
+    typedef typename BaseType::ConditionType ConditionType;
+    typedef typename BaseType::DofsArrayType DofsArrayType;
 
-    typedef typename KRATOS_DOUBLE_TYPE WeightType;
+    typedef KRATOS_DOUBLE_TYPE WeightType;
 
     ElementWeightingScheme(typename BaseType::Pointer pScheme)
     : BaseType(), mpScheme(pScheme)
@@ -53,10 +59,10 @@ public:
     ///@name Operations
     ///@{
 
-    BaseType::Pointer Clone() const override
+    typename BaseType::Pointer Clone() const override
     {
         if (mpScheme != nullptr)
-            return BaseType::Pointer(new ElementWeightingScheme(mpScheme->Clone()));
+            return typename BaseType::Pointer(new ElementWeightingScheme(mpScheme->Clone()));
         else
             return nullptr;
     }

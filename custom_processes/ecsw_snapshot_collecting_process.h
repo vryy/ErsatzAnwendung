@@ -115,7 +115,7 @@ public:
         if (rb.size() != nt * k)
             rb.resize(nt * k, false);
 
-        typedef ModelPartType::ElementType::EquationIdVectorType EquationIdVectorType;
+        typedef typename ModelPartType::ElementType::EquationIdVectorType EquationIdVectorType;
         EquationIdVectorType EquationId;
         const auto& CurrentProcessInfo = r_model_part.GetProcessInfo();
         rElementWeightIndex.clear();
