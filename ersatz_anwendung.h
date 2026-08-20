@@ -87,6 +87,7 @@ namespace Kratos
         ///@name Inquiry
         ///@{
 
+        static bool Has(const std::string& feature);
 
         ///@}
         ///@name Input and output

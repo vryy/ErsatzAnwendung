@@ -33,7 +33,10 @@ namespace Python
 
         class_<KratosErsatzAnwendung, KratosErsatzAnwendung::Pointer,
                bases<KratosApplication>, boost::noncopyable>
-               ("KratosErsatzAnwendung");
+               ("KratosErsatzAnwendung")
+        .def("Has", &KratosErsatzAnwendung::Has)
+            .staticmethod("Has")
+        ;
 
         ErsatzAnwendung_AddCustomProcessesToPython();
         ErsatzAnwendung_AddCustomStrategiesToPython();

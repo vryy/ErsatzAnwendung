@@ -32,4 +32,13 @@ namespace Kratos
         std::cout << "Initializing KratosErsatzAnwendung..." << std::endl;
     }
 
+    bool KratosErsatzAnwendung::Has(const std::string& feature)
+    {
+#ifdef ERSATZ_APP_USE_MATIO
+        if (feature == "Matio")
+            return true;
+#endif
+        return false;
+    }
+
 } // namespace Kratos
