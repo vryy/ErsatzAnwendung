@@ -34,7 +34,6 @@ endif()
 add_library(KratosErsatzAnwendung SHARED ${KRATOS_ERSATZ_ANWENDUNG_SOURCES})
 
 target_link_libraries(KratosErsatzAnwendung PUBLIC KratosCore)
-target_link_libraries(KratosErsatzAnwendung PRIVATE ${LAPACK_LIBRARIES})
 
 target_compile_definitions(KratosErsatzAnwendung PRIVATE KRATOS_CORE=IMPORT)
 target_compile_definitions(KratosErsatzAnwendung PRIVATE ERSATZ_ANWENDUNG=EXPORT)
