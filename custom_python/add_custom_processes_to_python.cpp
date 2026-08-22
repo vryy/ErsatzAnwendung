@@ -69,6 +69,7 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
 
     class_<SnapshotCollectingProcessType, typename SnapshotCollectingProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>
     ("SnapshotCollectingProcess", init<typename LinearSolverType::Pointer>())
+    .def("GetPrincipalValues", &SnapshotCollectingProcessType::GetPrincipalValues)
     .def("GetPrincipalComponents", &SnapshotCollectingProcessType::GetPrincipalComponents)
     .def("SavePrincipalComponents", &SnapshotCollectingProcessType::SavePrincipalComponents)
     ;

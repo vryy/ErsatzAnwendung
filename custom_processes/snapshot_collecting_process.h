@@ -59,6 +59,18 @@ public:
     }
 
     /**
+      * Compute the principal values of the snapshot matrix
+      */
+    Vector GetPrincipalValues() const
+    {
+        Matrix U;
+        Vector S;
+        BaseType::ComputePrincipalComponents(mSnapshot, U, S);
+
+        return S;
+    }
+
+    /**
       * Compute the principal components and vectors via SVD and save it to the file
       */
     Matrix GetPrincipalComponents(const std::size_t number_of_modes) const
