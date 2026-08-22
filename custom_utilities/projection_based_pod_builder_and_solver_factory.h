@@ -6,6 +6,8 @@
 //
 
 
+#include "includes/define.h"
+#include "includes/kratos_exception.h"
 #if !defined(KRATOS_PROJECTION_BASED_POD_BUILDER_AND_SOLVER_FACTORY_H_INCLUDED )
 #define  KRATOS_PROJECTION_BASED_POD_BUILDER_AND_SOLVER_FACTORY_H_INCLUDED
 
@@ -15,7 +17,6 @@
 /* External includes */
 
 /* Project includes */
-#include "includes/define.h"
 #include "custom_strategies/builder_and_solvers/projection_based_pod_builder_and_solver.h"
 
 namespace Kratos
@@ -28,8 +29,10 @@ struct ProjectionBasedPodBuilderAndSolverFactory
 	template<class TBuilderAndSolverType>
 	static typename ProjectionBasedPodBuilderAndSolver<TBuilderAndSolverType>::Pointer Create(typename TBuilderAndSolverType::Pointer pBuilderAndSolver)
 	{
+		if (pBuilderAndSolver == nullptr)
+			KRATOS_ERROR << "The builder and solver is nullptr";
 		typedef ProjectionBasedPodBuilderAndSolver<TBuilderAndSolverType> ProjectionBasedPodBuilderAndSolverType;
-		return typename ProjectionBasedPodBuilderAndSolverType::Pointer(new ProjectionBasedPodBuilderAndSolverType(pBuilderAndSolver->GetLinearSystemSolver()));
+		return typename ProjectionBasedPodBuilderAndSolverType::Pointer(new ProjectionBasedPodBuilderAndSolverType(*pBuilderAndSolver));
 	}
 };
 

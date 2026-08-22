@@ -16,7 +16,6 @@
 
 /* Project includes */
 #include "includes/define.h"
-#include "solving_strategies/builder_and_solvers/builder_and_solver.h"
 #include "custom_processes/pod_process.h"
 #include "custom_processes/snapshot_collecting_process.h"
 
@@ -118,6 +117,16 @@ public:
         /// The default PodProcess is the one collecting snapshots only. On the solve, it relies on FOM linear solver.
         this->SetPodProcess(typename PodProcessType::Pointer(
             new SnapshotCollectingProcess<TSparseSpaceType, TDenseSpaceType, ModelPartType>(pLinearSystemSolver)));
+    }
+
+    /** Copy constructor.
+     */
+    ProjectionBasedPodBuilderAndSolver(const BaseType& rOther)
+    : BaseType(rOther)
+    {
+        /// The default PodProcess is the one collecting snapshots only. On the solve, it relies on FOM linear solver.
+        this->SetPodProcess(typename PodProcessType::Pointer(
+            new SnapshotCollectingProcess<TSparseSpaceType, TDenseSpaceType, ModelPartType>(rOther.GetLinearSystemSolver())));
     }
 
     /** Destructor.

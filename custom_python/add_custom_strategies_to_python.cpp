@@ -56,7 +56,9 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
 
     class_< ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType,
             ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType::Pointer,
-            bases<BuilderAndSolverType>, boost::noncopyable > (
+            bases<ResidualBasedEliminationBuilderAndSolverDeactivationType>,
+            boost::noncopyable
+          > (
                 "ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivation",
                 init<typename LinearSolverType::Pointer>()
             )
