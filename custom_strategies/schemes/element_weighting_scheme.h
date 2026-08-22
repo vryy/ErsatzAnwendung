@@ -236,8 +236,9 @@ public:
         }
         else
         {
-            std::cout << "Warning: ElementWeightingScheme::CalculateSystemContributions: No weight found for element ID " << rElement.Id()
-                      << ". Using default weight of 1.0." << std::endl;
+            KRATOS_ERROR << "ElementWeightingScheme::CalculateSystemContributions: "
+                         << "No weight found for element ID " << rElement.Id()
+                         << std::endl;
         }
 
         LHS_Contribution.resize(0, 0);
