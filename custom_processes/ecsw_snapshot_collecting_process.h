@@ -42,6 +42,7 @@ public:
 
     typedef typename BaseType::ModelPartType ModelPartType;
     typedef typename ModelPartType::IndexType IndexType;
+    typedef typename ModelPartType::DofsArrayType DofsArrayType;
 
     EcswSnapshotCollectingProcess(typename TLinearSolver::Pointer pLinearSystemSolver)
     : BaseType(pLinearSystemSolver)
@@ -54,6 +55,9 @@ public:
 
         // collect the "unassembled" elemental residuals
         mElementSnapshot.push_back(this->TakeElementalSnapshot(this->GetModelPart()));
+
+        // collect the snapshot of the dof set
+        mDofSetSnapshot.push_back(this->TakeDofSetSnapshot(this->GetDofSet()));
     }
 
     void ExecuteFinalizeSolutionStep() override
@@ -62,6 +66,9 @@ public:
 
         // collect the "unassembled" elemental residuals
         mElementSnapshot.push_back(this->TakeElementalSnapshot(this->GetModelPart()));
+
+        // collect the snapshot of the dof set
+        mDofSetSnapshot.push_back(this->TakeDofSetSnapshot(this->GetDofSet()));
     }
 
     /**
@@ -86,10 +93,10 @@ public:
         /* Compute the projection matrix */
         Matrix U;
         Vector S;
-        BaseType::ComputePrincipalComponents(BaseType::GetSnapshot(), U, S);
+        BaseType::ComputePrincipalComponents(mDofSetSnapshot, U, S);
 
         const std::size_t m = U.size1();
-        const std::size_t nt = BaseType::GetSnapshot().size();
+        const std::size_t nt = mDofSetSnapshot.size();
         const std::size_t k = std::min(nt, number_of_modes);
 
         Matrix Phi(m, k);
@@ -168,8 +175,11 @@ public:
 
 private:
 
-    /// Collecting the snapshot of the "unassembled" elemental contributions (i.e., the elemental residuals) for ECSW method
+    /// Container of the snapshot of the "unassembled" elemental contributions (i.e., the elemental residuals) for ECSW method
     std::vector<std::map<IndexType, Vector> > mElementSnapshot = {};
+
+    /// Container of the snapshot of the dof set
+    std::vector<Vector> mDofSetSnapshot = {};
 
     /// Collect the "unassembled" elemental contributions (i.e., the elemental residuals) for ECSW method
     std::map<IndexType, Vector> TakeElementalSnapshot(const ModelPartType& r_model_part) const
@@ -183,6 +193,18 @@ private:
             single_snapshot[element_id] = elemental_residual;
         }
         return single_snapshot;
+    }
+
+    /// Record the current values of the free dof into a vector
+    Vector TakeDofSetSnapshot(const DofsArrayType& DofSet) const
+    {
+        Vector dof_vector(DofSet.size());
+
+        std::size_t i = 0;
+        for (auto it = DofSet.begin(); it != DofSet.end(); ++it, ++i)
+            dof_vector[i] = it->GetSolutionStepValue();
+
+        return dof_vector;
     }
 
     /// Assemble the elemental contributions to the global residual vector

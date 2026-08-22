@@ -170,20 +170,22 @@ protected:
     }
 
     /**
-     * Record the current values of the dof set into a vector
+     * Record the current values of the free dof into a vector
      */
     Vector TakeSnapshot() const
     {
         const auto& DofSet = this->GetDofSet();
-        const std::size_t SystemSize = DofSet.size();
-        Vector dof_vector(SystemSize);
 
-        std::size_t i = 0;
-        for (auto it = DofSet.begin(); it != DofSet.end(); ++it, ++i)
+        std::vector<double> values;
+
+        for (auto it = DofSet.begin(); it != DofSet.end(); ++it)
         {
-            dof_vector[i] = it->GetSolutionStepValue();
+            if (it->IsFree())
+                values.push_back(it->GetSolutionStepValue());
         }
 
+        Vector dof_vector(values.size());
+        std::copy(values.begin(), values.end(), dof_vector.begin());
         return dof_vector;
     }
 
