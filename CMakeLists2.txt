@@ -1,6 +1,7 @@
 ## generate variables with the sources
 set( KRATOS_ERSATZ_ANWENDUNG_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ersatz_anwendung.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ersatz_anwendung_variables.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_processes_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_strategies_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp

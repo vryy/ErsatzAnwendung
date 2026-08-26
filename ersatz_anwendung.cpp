@@ -14,6 +14,7 @@
 
 // Project includes
 #include "ersatz_anwendung.h"
+#include "ersatz_anwendung_variables.h"
 
 namespace Kratos
 {
@@ -22,7 +23,9 @@ namespace Kratos
     // constructor
     KratosErsatzAnwendung::KratosErsatzAnwendung()
         : KratosApplication("ErsatzAnwendung")
-    {}
+    {
+        KRATOS_REGISTER_VARIABLE( ELEMENT_WEIGHT )
+    }
 
     // register the application to the Kratos kernel
     void KratosErsatzAnwendung::Register()

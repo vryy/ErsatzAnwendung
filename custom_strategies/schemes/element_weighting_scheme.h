@@ -16,6 +16,7 @@
 
 /* Project includes */
 #include "solving_strategies/schemes/scheme.h"
+#include "ersatz_anwendung_variables.h"
 
 
 namespace Kratos
@@ -156,6 +157,16 @@ public:
         TSystemVectorType& b) override
     {
         mpScheme->Predict(rModelPart, rDofSet, A, Dx, b);
+        // save the element weight for post-processing
+        for (auto it = rModelPart.Elements().begin(); it != rModelPart.Elements().end(); ++it)
+        {
+            auto itw = mElementWeights.find(it->Id());
+            if (itw != mElementWeights.end())
+            {
+                WeightType weight = itw->second;
+                it->SetValue(ELEMENT_WEIGHT, weight);
+            }
+        }
     }
 
     void Update(
