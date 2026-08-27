@@ -81,6 +81,7 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
     class_<ElementWeightingSchemeType, ElementWeightingSchemeType::Pointer, bases<SchemeType>, boost::noncopyable>
     ("ElementWeightingScheme", init<typename SchemeType::Pointer>())
     .def("SetElementWeight", &ElementWeightingSchemeType::SetElementWeight)
+    .def("SetProjectionOperator", &ElementWeightingSchemeType::SetProjectionOperator)
     ;
 }
 

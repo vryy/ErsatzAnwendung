@@ -155,6 +155,21 @@ public:
         TSystemVectorType& b) override
     {
         mpScheme->Predict(rModelPart, rDofSet, A, Dx, b);
+
+        // here to initialize the vector of full force
+        if (mpPhi != nullptr)
+        {
+            std::size_t full_system_size = mpPhi->size1();
+            std::size_t reduced_system_size = mpPhi->size2();
+
+            if (mForceFom.size() != full_system_size)
+                mForceFom.resize(full_system_size, false);
+            if (mForceRom.size() != reduced_system_size)
+                mForceRom.resize(reduced_system_size, false);
+            noalias(mForceFom) = ZeroVector(full_system_size);
+            noalias(mForceRom) = ZeroVector(reduced_system_size);
+        }
+
         // save the element weight for post-processing
         for (auto it = rModelPart.Elements().begin(); it != rModelPart.Elements().end(); ++it)
         {
@@ -175,6 +190,21 @@ public:
         TSystemVectorType& b) override
     {
         mpScheme->Update(rModelPart, rDofSet, A, Dx, b);
+
+        if (mpPhi != nullptr)
+        {
+            std::size_t full_system_size = mpPhi->size1();
+            std::size_t reduced_system_size = mpPhi->size2();
+            TSystemVectorType aux = prod(trans(*mpPhi), mForceFom);
+            double diff = norm_2(aux - mForceRom);
+            KRATOS_WATCH(norm_2(mForceFom))
+            std::cout << "norm_2(V^T * mForceFom): " << norm_2(aux) << std::endl;
+            // KRATOS_WATCH(mForceRom)
+            KRATOS_WATCH(norm_2(mForceRom))
+            std::cout << "difference reduced force and hyper reduction force: " << diff << std::endl;
+            noalias(mForceFom) = ZeroVector(full_system_size);
+            noalias(mForceRom) = ZeroVector(reduced_system_size);
+        }
     }
 
     void CalculateOutputData(
@@ -230,13 +260,44 @@ public:
         {
             WeightType weight = it->second;
 
-            if (weight > 0.0)
+            if ((weight > 0.0) || (mpPhi != nullptr))
             {
                 mpScheme->CalculateSystemContributions(rElement,
                     LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
 
+                if (mpPhi != nullptr)
+                {
+                    // assemble the force of FOM
+                    this->AssembleRHS(mForceFom, RHS_Contribution, rEquationIdVector);
+                }
+
                 LHS_Contribution *= weight;
                 RHS_Contribution *= weight;
+
+                if ((weight > 0.0) && (mpPhi != nullptr))
+                {
+                    // assemble the force of ROM
+                    const auto& Phi = *mpPhi;
+                    const std::size_t full_system_size = Phi.size1();
+                    const std::size_t reduced_system_size = Phi.size2();
+
+                    LocalSystemMatrixType localV(rEquationIdVector.size(), reduced_system_size);
+                    for (std::size_t j = 0; j < rEquationIdVector.size(); ++j)
+                    {
+                        if (rEquationIdVector[j] < full_system_size)
+                            noalias(row(localV, j)) = row(Phi, rEquationIdVector[j]);
+                        else
+                            noalias(row(localV, j)) = ZeroVector(reduced_system_size);
+                    }
+
+                    Vector reduced_elemental_residual = prod(trans(localV), RHS_Contribution);
+                    // KRATOS_WATCH(localV.size1(), localV.size2(), RHS_Contribution.size(), mForceRom.size(),
+                    //     reduced_elemental_residual.size(), norm_frobeniusl(localV), norm_2(RHS_Contribution), norm_2(reduced_elemental_residual))
+                    // std::cout << "localV of element " << rElement.Id() << ": " << localV << std::endl;
+                    // std::cout << "residual of element " << rElement.Id() << ": " << RHS_Contribution << std::endl;
+                    // std::cout << "contribution of element " << rElement.Id() << " to mForceRom: " << reduced_elemental_residual << std::endl;
+                    noalias(mForceRom) += reduced_elemental_residual;
+                }
 
                 return;
             }
@@ -383,6 +444,12 @@ public:
         mElementWeights = rElementWeights;
     }
 
+    /// Set the global projection matrix
+    void SetProjectionOperator(const LocalSystemMatrixType& Phi)
+    {
+        mpPhi = &Phi;
+    }
+
     ///@}
     ///@name Input and output
     ///@{
@@ -415,6 +482,34 @@ private:
 
     typename BaseType::Pointer mpScheme = nullptr;
     std::map<IndexType, WeightType> mElementWeights;
+
+    /// pointer to the global projection matrix. If this is set, the difference
+    /// between reduced global force vector and the weighted approximation can be evaluated.
+    /// This can then be used to estimate the accuracy of the ECSW scheme.
+    const LocalSystemMatrixType* mpPhi = nullptr;
+
+    TSystemVectorType mForceFom;
+    TSystemVectorType mForceRom;
+
+    /// Assemble the elemental contributions to the global residual vector
+    void AssembleRHS(
+        TSystemVectorType& b,
+        const LocalSystemVectorType& RHS_Contribution,
+        const typename ModelPartType::ElementType::EquationIdVectorType& EquationId
+    ) const
+    {
+        unsigned int local_size = RHS_Contribution.size();
+        unsigned int global_size = b.size();
+
+        for (unsigned int i_local = 0; i_local < local_size; ++i_local)
+        {
+            unsigned int i_global = EquationId[i_local];
+            if (i_global < global_size) //on "free" DOFs
+            {
+                b[i_global] += RHS_Contribution[i_local];
+            }
+        }
+    }
 
 }; /* Class ElementWeightingScheme */
 
