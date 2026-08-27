@@ -211,7 +211,6 @@ namespace Kratos
 
     ///@}
 
-
     ///@name Type Definitions
     ///@{
 

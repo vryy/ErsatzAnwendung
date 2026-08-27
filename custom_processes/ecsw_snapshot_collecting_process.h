@@ -5,18 +5,15 @@
 //
 //
 
-
 #if !defined(KRATOS_ERSATZ_ANWENDUNG_ECSW_SNAPSHOT_COLLECTING_SCHEME_H_INCLUDED )
 #define  KRATOS_ERSATZ_ANWENDUNG_ECSW_SNAPSHOT_COLLECTING_SCHEME_H_INCLUDED
-
 
 /* System includes */
 
 /* External includes */
 
 /* Project includes */
-#include "custom_processes/pod_process.h"
-#include "custom_utilities/pod_utils.h"
+#include "custom_processes/snapshot_collecting_process.h"
 
 
 namespace Kratos

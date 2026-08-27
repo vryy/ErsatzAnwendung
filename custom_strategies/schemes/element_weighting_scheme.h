@@ -5,10 +5,8 @@
 //
 //
 
-
 #if !defined(KRATOS_ERSATZ_ANWENDUNG_ELEMENT_WEIGHTING_SCHEME_H_INCLUDED )
 #define  KRATOS_ERSATZ_ANWENDUNG_ELEMENT_WEIGHTING_SCHEME_H_INCLUDED
-
 
 /* System includes */
 
@@ -242,8 +240,6 @@ public:
 
                 return;
             }
-            //else
-            //    std::cout << "Info: Element " << rElement.Id() << " is ignored." << std::endl;
         }
         else
         {
@@ -268,21 +264,6 @@ public:
     {
         mpScheme->CalculateSystemContributions(rElement, LHS_Contribution, RHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
 
-        /*
-        // apply weighting scheme
-        auto it = mElementWeights.find(rElement.Id());
-        if (it != mElementWeights.end())
-        {
-            WeightType weight = it->second;
-            LHS_Contribution *= weight;
-            RHS_Contribution *= weight;
-        }
-        else
-        {
-            std::cout << "Warning: ElementWeightingScheme::CalculateSystemContributions: No weight found for element ID " << rElement.Id()
-                << ". Using default weight of 1.0." << std::endl;
-        }
-        */
     }
 #endif
 
@@ -317,20 +298,6 @@ public:
     {
         mpScheme->CalculateRHSContribution(rElement, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
 
-        /*
-        // apply weighting scheme
-        auto it = mElementWeights.find(rElement.Id());
-        if (it != mElementWeights.end())
-        {
-            WeightType weight = it->second;
-            RHS_Contribution *= weight;
-        }
-        else
-        {
-            std::cout << "Warning: ElementWeightingScheme::CalculateSystemContributions: No weight found for element ID " << rElement.Id()
-                << ". Using default weight of 1.0." << std::endl;
-        }
-        */
     }
 
     void CalculateRHSContribution(
@@ -350,20 +317,6 @@ public:
     {
         mpScheme->CalculateLHSContribution(rElement, LHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
 
-        /*
-        // apply weighting scheme
-        auto it = mElementWeights.find(rElement.Id());
-        if (it != mElementWeights.end())
-        {
-            WeightType weight = it->second;
-            LHS_Contribution *= weight;
-        }
-        else
-        {
-            std::cout << "Warning: ElementWeightingScheme::CalculateSystemContributions: No weight found for element ID " << rElement.Id()
-                << ". Using default weight of 1.0." << std::endl;
-        }
-        */
     }
 
 #ifdef KRATOS_NONSQUARE_SUPPORT
@@ -460,7 +413,7 @@ public:
 
 private:
 
-    BaseType::Pointer mpScheme = nullptr;
+    typename BaseType::Pointer mpScheme = nullptr;
     std::map<IndexType, WeightType> mElementWeights;
 
 }; /* Class ElementWeightingScheme */
