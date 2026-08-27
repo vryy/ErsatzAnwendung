@@ -105,6 +105,12 @@ public:
         return true;
     }
 
+    /**
+     * @brief This function subjects to be executed at every build step
+     */
+    virtual void ExecuteBuild()
+    {}
+
 protected:
 
     /**

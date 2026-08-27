@@ -76,6 +76,8 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
 
     class_<EcswSnapshotCollectingProcessType, typename EcswSnapshotCollectingProcessType::Pointer, bases<SnapshotCollectingProcessType>, boost::noncopyable>
     ("EcswSnapshotCollectingProcess", init<typename LinearSolverType::Pointer>())
+    .def("SetForceTolerance", &EcswSnapshotCollectingProcessType::SetForceTolerance)
+    .def("SetNormalize", &EcswSnapshotCollectingProcessType::SetNormalize)
     .def("ConstructSystem", &EcswSnapshotCollectingProcess_ConstructSystem<EcswSnapshotCollectingProcessType>)
     ;
 

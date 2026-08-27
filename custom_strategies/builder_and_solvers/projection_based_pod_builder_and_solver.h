@@ -164,6 +164,17 @@ public:
         mpPodProcess->ExecuteInitializeSolutionStep();
     }
 
+    void Build(
+        typename TSchemeType::Pointer pScheme,
+        ModelPartType& rModelPart,
+        TSystemMatrixType& rA,
+        TSystemVectorType& rb
+    ) override
+    {
+        BaseType::Build(pScheme, rModelPart, rA, rb);
+        mpPodProcess->ExecuteBuild();
+    }
+
     void FinalizeSolutionStep(
         ModelPartType& rModelPart,
         TSystemMatrixType& rA,
