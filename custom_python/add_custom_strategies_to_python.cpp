@@ -21,9 +21,9 @@
 // builder_and_solvers
 #include "solving_strategies/builder_and_solvers/builder_and_solver.h"
 #include "solving_strategies/builder_and_solvers/residualbased_elimination_builder_and_solver_deactivation.h"
-#include "custom_strategies/builder_and_solvers/projection_based_pod_builder_and_solver.h"
+#include "custom_strategies/builder_and_solvers/pod_builder_and_solver.h"
 #include "custom_strategies/schemes/element_weighting_scheme.h"
-#include "custom_utilities/projection_based_pod_builder_and_solver_factory.h"
+#include "custom_utilities/pod_builder_and_solver_factory.h"
 #include "custom_python/add_custom_strategies_to_python.h"
 
 namespace Kratos
@@ -47,31 +47,31 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
 
     typedef ResidualBasedEliminationBuilderAndSolverDeactivation<SparseSpaceType, LocalSpaceType, LinearSolverType, ModelPart> ResidualBasedEliminationBuilderAndSolverDeactivationType;
 
-    typedef ProjectionBasedPodBuilderAndSolver<ResidualBasedEliminationBuilderAndSolverDeactivationType> ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType;
+    typedef PodBuilderAndSolver<ResidualBasedEliminationBuilderAndSolverDeactivationType> PodResidualBasedEliminationBuilderAndSolverDeactivationType;
 
     typedef ElementWeightingScheme<SparseSpaceType, LocalSpaceType, ModelPart> ElementWeightingSchemeType;
 
     //********************************************************************
     //********************************************************************
 
-    class_< ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType,
-            ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType::Pointer,
+    class_< PodResidualBasedEliminationBuilderAndSolverDeactivationType,
+            PodResidualBasedEliminationBuilderAndSolverDeactivationType::Pointer,
             bases<ResidualBasedEliminationBuilderAndSolverDeactivationType>,
             boost::noncopyable
           > (
-                "ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivation",
+                "PodResidualBasedEliminationBuilderAndSolverDeactivation",
                 init<typename LinearSolverType::Pointer>()
             )
-    .def("SetPodProcess", &ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType::SetPodProcess)
-    .def("GetPodProcess", &ProjectionBasedPODResidualBasedEliminationBuilderAndSolverDeactivationType::pGetPodProcess)
+    .def("SetPodProcess", &PodResidualBasedEliminationBuilderAndSolverDeactivationType::SetPodProcess)
+    .def("GetPodProcess", &PodResidualBasedEliminationBuilderAndSolverDeactivationType::pGetPodProcess)
     ;
 
     //********************************************************************
     //********************************************************************
 
-    class_<ProjectionBasedPodBuilderAndSolverFactory, ProjectionBasedPodBuilderAndSolverFactory::Pointer, boost::noncopyable>
-    ("ProjectionBasedPodBuilderAndSolverFactory", init<>())
-    .def("Create", &ProjectionBasedPodBuilderAndSolverFactory::Create<ResidualBasedEliminationBuilderAndSolverDeactivationType>)
+    class_<PodBuilderAndSolverFactory, PodBuilderAndSolverFactory::Pointer, boost::noncopyable>
+    ("PodBuilderAndSolverFactory", init<>())
+    .def("Create", &PodBuilderAndSolverFactory::Create<ResidualBasedEliminationBuilderAndSolverDeactivationType>)
     .staticmethod("Create");
     ;
 

@@ -6,8 +6,8 @@
 //
 
 
-#if !defined(KRATOS_PROJECTION_BASED_POD_BUILDER_AND_SOLVER_H_INCLUDED )
-#define  KRATOS_PROJECTION_BASED_POD_BUILDER_AND_SOLVER_H_INCLUDED
+#if !defined(KRATOS_POD_BUILDER_AND_SOLVER_H_INCLUDED)
+#define  KRATOS_POD_BUILDER_AND_SOLVER_H_INCLUDED
 
 
 /* System includes */
@@ -55,13 +55,13 @@ namespace Kratos
  * Various ways to construct the reduces basis are supported.
  */
 template<class TBuilderAndSolverType>
-class ProjectionBasedPodBuilderAndSolver : public TBuilderAndSolverType
+class PodBuilderAndSolver : public TBuilderAndSolverType
 {
 public:
     /**@name Type Definitions */
     /*@{ */
 
-    KRATOS_CLASS_POINTER_DEFINITION( ProjectionBasedPodBuilderAndSolver );
+    KRATOS_CLASS_POINTER_DEFINITION( PodBuilderAndSolver );
 
     typedef TBuilderAndSolverType BaseType;
 
@@ -111,7 +111,7 @@ public:
 
     /** Default constructor.
      */
-    ProjectionBasedPodBuilderAndSolver(typename TLinearSolverType::Pointer pLinearSystemSolver)
+    PodBuilderAndSolver(typename TLinearSolverType::Pointer pLinearSystemSolver)
     : BaseType(pLinearSystemSolver)
     {
         /// The default PodProcess is the one collecting snapshots only. On the solve, it relies on FOM linear solver.
@@ -121,7 +121,7 @@ public:
 
     /** Copy constructor.
      */
-    ProjectionBasedPodBuilderAndSolver(const BaseType& rOther)
+    PodBuilderAndSolver(const BaseType& rOther)
     : BaseType(rOther)
     {
         /// The default PodProcess is the one collecting snapshots only. On the solve, it relies on FOM linear solver.
@@ -131,7 +131,7 @@ public:
 
     /** Destructor.
     */
-    ~ProjectionBasedPodBuilderAndSolver() override
+    ~PodBuilderAndSolver() override
     {}
 
     /*@} */
@@ -296,7 +296,7 @@ private:
 
     /*@} */
 
-}; /* Class ProjectionBasedPodBuilderAndSolver */
+}; /* Class PodBuilderAndSolver */
 
 /*@} */
 
@@ -308,4 +308,4 @@ private:
 
 }  /* namespace Kratos.*/
 
-#endif /* KRATOS_PROJECTION_BASED_POD_BUILDER_AND_SOLVER_H_INCLUDED  defined */
+#endif /* KRATOS_POD_BUILDER_AND_SOLVER_H_INCLUDED  defined */
