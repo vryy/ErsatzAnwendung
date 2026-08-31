@@ -198,7 +198,8 @@ public:
     void SetPodProcess(typename PodProcessType::Pointer pPodProcess)
     {
         mpPodProcess = pPodProcess;
-        BaseType::SetLinearSystemSolver(pPodProcess);
+        BaseType::SetLinearSystemSolver(pPodProcess); // POD process will be assigned as the linear solver.
+            // Hence, the BuildAndSolve() will trigger the POD process to solve the system.
     }
 
     typename PodProcessType::Pointer pGetPodProcess() const

@@ -21,7 +21,7 @@ namespace Kratos
 {
 
 /**
- * This scheme is an adapter of other scheme which applies weighting factors to the element contributions.
+ * This scheme is an adapter of other scheme which applies weighting factor to the element contributions.
  */
 template<class TSparseSpace,
          class TDenseSpace, //= DenseSpace<double>
@@ -159,15 +159,15 @@ public:
         // here to initialize the vector of full force
         if (mpPhi != nullptr)
         {
-            std::size_t full_system_size = mpPhi->size1();
-            std::size_t reduced_system_size = mpPhi->size2();
+            std::size_t full_system_size = TDenseSpaceType::Size1(*mpPhi);
+            std::size_t reduced_system_size = TDenseSpaceType::Size2(*mpPhi);
 
-            if (mForceFom.size() != full_system_size)
-                mForceFom.resize(full_system_size, false);
-            if (mForceRom.size() != reduced_system_size)
-                mForceRom.resize(reduced_system_size, false);
-            noalias(mForceFom) = ZeroVector(full_system_size);
-            noalias(mForceRom) = ZeroVector(reduced_system_size);
+            if (TSparseSpaceType::Size(mForceFom) != full_system_size)
+                TSparseSpaceType::Resize(mForceFom, full_system_size);
+            if (TDenseSpaceType::Size(mForceRom) != reduced_system_size)
+                TDenseSpaceType::Resize(mForceRom, reduced_system_size);
+            TSparseSpaceType::SetToZero(mForceFom);
+            TDenseSpaceType::SetToZero(mForceRom);
         }
 
         // save the element weight for post-processing
@@ -193,17 +193,18 @@ public:
 
         if (mpPhi != nullptr)
         {
-            std::size_t full_system_size = mpPhi->size1();
-            std::size_t reduced_system_size = mpPhi->size2();
-            TSystemVectorType aux = prod(trans(*mpPhi), mForceFom);
+            std::size_t full_system_size = TDenseSpaceType::Size1(*mpPhi);
+            std::size_t reduced_system_size = TDenseSpaceType::Size2(*mpPhi);
+            TSystemVectorType aux(reduced_system_size);
+            TDenseSpaceType::TransposeMult(*mpPhi, mForceFom, aux);
             double diff = norm_2(aux - mForceRom);
             KRATOS_WATCH(norm_2(mForceFom))
             std::cout << "norm_2(V^T * mForceFom): " << norm_2(aux) << std::endl;
             // KRATOS_WATCH(mForceRom)
             KRATOS_WATCH(norm_2(mForceRom))
             std::cout << "difference reduced force and hyper reduction force: " << diff << std::endl;
-            noalias(mForceFom) = ZeroVector(full_system_size);
-            noalias(mForceRom) = ZeroVector(reduced_system_size);
+            TSparseSpaceType::SetToZero(mForceFom);
+            TDenseSpaceType::SetToZero(mForceRom);
         }
     }
 
@@ -278,8 +279,8 @@ public:
                 {
                     // assemble the force of ROM
                     const auto& Phi = *mpPhi;
-                    const std::size_t full_system_size = Phi.size1();
-                    const std::size_t reduced_system_size = Phi.size2();
+                    const std::size_t full_system_size = TDenseSpaceType::Size1(Phi);
+                    const std::size_t reduced_system_size = TDenseSpaceType::Size2(Phi);
 
                     LocalSystemMatrixType localV(rEquationIdVector.size(), reduced_system_size);
                     for (std::size_t j = 0; j < rEquationIdVector.size(); ++j)
@@ -290,7 +291,8 @@ public:
                             noalias(row(localV, j)) = ZeroVector(reduced_system_size);
                     }
 
-                    Vector reduced_elemental_residual = prod(trans(localV), RHS_Contribution);
+                    LocalSystemVectorType reduced_elemental_residual(reduced_system_size);
+                    TDenseSpaceType::TransposeMult(localV, RHS_Contribution, reduced_elemental_residual);
                     // KRATOS_WATCH(localV.size1(), localV.size2(), RHS_Contribution.size(), mForceRom.size(),
                     //     reduced_elemental_residual.size(), norm_frobeniusl(localV), norm_2(RHS_Contribution), norm_2(reduced_elemental_residual))
                     // std::cout << "localV of element " << rElement.Id() << ": " << localV << std::endl;
@@ -489,7 +491,7 @@ private:
     const LocalSystemMatrixType* mpPhi = nullptr;
 
     TSystemVectorType mForceFom;
-    TSystemVectorType mForceRom;
+    LocalSystemVectorType mForceRom;
 
     /// Assemble the elemental contributions to the global residual vector
     void AssembleRHS(
@@ -498,8 +500,8 @@ private:
         const typename ModelPartType::ElementType::EquationIdVectorType& EquationId
     ) const
     {
-        unsigned int local_size = RHS_Contribution.size();
-        unsigned int global_size = b.size();
+        unsigned int local_size = TDenseSpaceType::Size(RHS_Contribution);
+        unsigned int global_size = TSparseSpaceType::Size(b);
 
         for (unsigned int i_local = 0; i_local < local_size; ++i_local)
         {

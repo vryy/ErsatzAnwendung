@@ -5,12 +5,8 @@
 //
 //
 
-
-#include "includes/define.h"
-#include "includes/kratos_exception.h"
 #if !defined(KRATOS_POD_BUILDER_AND_SOLVER_FACTORY_H_INCLUDED )
 #define  KRATOS_POD_BUILDER_AND_SOLVER_FACTORY_H_INCLUDED
-
 
 /* System includes */
 
