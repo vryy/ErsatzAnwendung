@@ -1,0 +1,402 @@
+//
+//   Project Name:        KratosErsatzAnwendung
+//   Last Modified by:    $Author: hbui $
+//   Date:                $Date: Aug 29, 2026 $
+//
+//
+
+#if !defined(KRATOS_ERSATZ_ANWENDUNG_RAYLEIGH_RITZ_PROJECTION_SCHEME_H_INCLUDED )
+#define  KRATOS_ERSATZ_ANWENDUNG_RAYLEIGH_RITZ_PROJECTION_SCHEME_H_INCLUDED
+
+/* System includes */
+
+/* External includes */
+
+/* Project includes */
+#include "solving_strategies/schemes/scheme.h"
+#include "ersatz_anwendung_variables.h"
+
+
+namespace Kratos
+{
+
+/**
+ * TODO
+ */
+template<class TSparseSpace,
+         class TDenseSpace, //= DenseSpace<double>
+         class TModelPartType = ModelPart
+         >
+class RayleighRitzProjectionScheme : public Scheme<TSparseSpace, TDenseSpace, TModelPartType>
+{
+public:
+
+    KRATOS_CLASS_POINTER_DEFINITION( RayleighRitzProjectionScheme );
+
+    typedef Scheme<TSparseSpace, TDenseSpace, TModelPartType> BaseType;
+    typedef typename BaseType::TSystemMatrixType TSystemMatrixType;
+    typedef typename BaseType::TSystemVectorType TSystemVectorType;
+    typedef typename BaseType::TSparseSpaceType TSparseSpaceType;
+    typedef typename BaseType::TDenseSpaceType TDenseSpaceType;
+
+    typedef typename BaseType::LocalSystemMatrixType LocalSystemMatrixType;
+    typedef typename BaseType::LocalSystemVectorType LocalSystemVectorType;
+
+    typedef typename TSparseSpaceType::IndexType IndexType;
+    typedef typename BaseType::ModelPartType ModelPartType;
+    typedef typename BaseType::ElementType ElementType;
+    typedef typename BaseType::ConditionType ConditionType;
+    typedef typename BaseType::DofsArrayType DofsArrayType;
+
+    RayleighRitzProjectionScheme(typename BaseType::Pointer pScheme)
+    : BaseType(), mpScheme(pScheme)
+    {
+    }
+
+    ///@name Operations
+    ///@{
+
+    static typename BaseType::Pointer Create(typename BaseType::Pointer pScheme, const LocalSystemMatrixType& Phi)
+    {
+        auto pNewScheme = RayleighRitzProjectionScheme::Pointer(new RayleighRitzProjectionScheme(pScheme));
+        pNewScheme->SetProjectionOperator(Phi);
+        return pNewScheme;
+    }
+
+    typename BaseType::Pointer Clone() const override
+    {
+        if (mpScheme != nullptr)
+            return typename BaseType::Pointer(new RayleighRitzProjectionScheme(mpScheme->Clone()));
+        else
+            return nullptr;
+    }
+
+    void Initialize(ModelPartType& rModelPart) override
+    {
+        mpScheme->Initialize(rModelPart);
+    }
+
+    bool SchemeIsInitialized() const override
+    {
+        return mpScheme->SchemeIsInitialized();
+    }
+
+    void SetSchemeIsInitialized(bool SchemeIsInitializedFlag = true) override
+    {
+        mpScheme->SetSchemeIsInitialized(SchemeIsInitializedFlag);
+    }
+
+    bool ElementsAreInitialized() const override
+    {
+        return mpScheme->ElementsAreInitialized();
+    }
+
+    void SetElementsAreInitialized(bool ElementsAreInitializedFlag = true) override
+    {
+        mpScheme->SetElementsAreInitialized(ElementsAreInitializedFlag);
+    }
+
+    bool ConditionsAreInitialized() const override
+    {
+        return mpScheme->ConditionsAreInitialized();
+    }
+
+    void SetConditionsAreInitialized(bool ConditionsAreInitializedFlag = true) override
+    {
+        mpScheme->SetConditionsAreInitialized(ConditionsAreInitializedFlag);
+    }
+
+    void InitializeElements(ModelPartType& rModelPart) override
+    {
+        mpScheme->InitializeElements(rModelPart);
+    }
+
+    void InitializeConditions(ModelPartType& rModelPart) override
+    {
+        mpScheme->InitializeConditions(rModelPart);
+    }
+
+    void InitializeSolutionStep(
+        ModelPartType& rModelPart,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->InitializeSolutionStep(rModelPart, A, Dx, b);
+    }
+
+    void FinalizeSolutionStep(
+        ModelPartType& rModelPart,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->FinalizeSolutionStep(rModelPart, A, Dx, b);
+    }
+
+    void InitializeNonLinIteration(
+        ModelPartType& rModelPart,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->InitializeNonLinIteration(rModelPart, A, Dx, b);
+    }
+
+    void FinalizeNonLinIteration(
+        ModelPartType& rModelPart,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->FinalizeNonLinIteration(rModelPart, A, Dx, b);
+    }
+
+    void Predict(
+        ModelPartType& rModelPart,
+        DofsArrayType& rDofSet,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->Predict(rModelPart, rDofSet, A, Dx, b);
+    }
+
+    void Update(
+        ModelPartType& rModelPart,
+        DofsArrayType& rDofSet,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->Update(rModelPart, rDofSet, A, Dx, b);
+    }
+
+    void CalculateOutputData(
+        ModelPartType& rModelPart,
+        DofsArrayType& rDofSet,
+        TSystemMatrixType& A,
+        TSystemVectorType& Dx,
+        TSystemVectorType& b) override
+    {
+        mpScheme->CalculateOutputData(rModelPart, rDofSet, A, Dx, b);
+    }
+
+    void CleanOutputData() override
+    {
+        mpScheme->CleanOutputData();
+    }
+
+    void Clean() override
+    {
+        mpScheme->Clean();
+    }
+
+    void CleanMemory(ElementType& rCurrentElement) override
+    {
+        mpScheme->CleanMemory(rCurrentElement);
+    }
+
+    void CleanMemory(ConditionType& rCurrentCondition) override
+    {
+        mpScheme->CleanMemory(rCurrentCondition);
+    }
+
+    void Clear() override
+    {
+        mpScheme->Clear();
+    }
+
+    int Check(const ModelPartType& rModelPart) const override
+    {
+        return mpScheme->Check(rModelPart);
+    }
+
+    void CalculateSystemContributions(
+        ElementType& rElement,
+        LocalSystemMatrixType& LHS_Contribution,
+        LocalSystemVectorType& RHS_Contribution,
+        typename ElementType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        // compute the elemental contribution of FOM
+        mpScheme->CalculateSystemContributions(rElement, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+
+        if (mpPhi == nullptr)
+            KRATOS_ERROR << "The projection operator is not yet set";
+
+        // construct the ROM contribution
+        if (rEquationIdVector.size() > 0)
+        {
+            // assemble the force of ROM
+            const auto& Phi = *mpPhi;
+            const std::size_t full_system_size = Phi.size1();
+            const std::size_t reduced_system_size = Phi.size2();
+
+            LocalSystemMatrixType localV(rEquationIdVector.size(), reduced_system_size);
+            for (std::size_t j = 0; j < rEquationIdVector.size(); ++j)
+            {
+                if (rEquationIdVector[j] < full_system_size)
+                    noalias(row(localV, j)) = row(Phi, rEquationIdVector[j]);
+                else
+                    noalias(row(localV, j)) = ZeroVector(reduced_system_size);
+            }
+
+            LocalSystemVectorType reduced_elemental_residual = prod(trans(localV), RHS_Contribution);
+            LocalSystemMatrixType reduced_elemental_stiffness = prod(trans(localV), Matrix(prod(LHS_Contribution, localV)));
+
+            // modify the output
+            RHS_Contribution = reduced_elemental_residual;
+            LHS_Contribution = reduced_elemental_stiffness;
+            rEquationIdVector.resize(reduced_system_size);
+            for (std::size_t i = 0; i < reduced_system_size; ++i)
+                rEquationIdVector[i] = i;
+        }
+    }
+
+#ifdef KRATOS_NONSQUARE_SUPPORT
+    void CalculateSystemContributions(
+        ElementType& rElement,
+        LocalSystemMatrixType& LHS_Contribution,
+        LocalSystemVectorType& RHS_Contribution,
+        typename ElementType::EquationIdVectorType& rRowEquationIdVector,
+        typename ElementType::EquationIdVectorType& rColEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateSystemContributions(rElement, LHS_Contribution, RHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+    }
+#endif
+
+    void CalculateSystemContributions(
+        ConditionType& rCondition,
+        LocalSystemMatrixType& LHS_Contribution,
+        LocalSystemVectorType& RHS_Contribution,
+        typename ConditionType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateSystemContributions(rCondition, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+    }
+
+#ifdef KRATOS_NONSQUARE_SUPPORT
+    void CalculateSystemContributions(
+        ConditionType& rCondition,
+        LocalSystemMatrixType& LHS_Contribution,
+        LocalSystemVectorType& RHS_Contribution,
+        typename ConditionType::EquationIdVectorType& rRowEquationIdVector,
+        typename ConditionType::EquationIdVectorType& rColEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateSystemContributions(rCondition, LHS_Contribution, RHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+    }
+#endif
+
+    void CalculateRHSContribution(
+        ElementType& rElement,
+        LocalSystemVectorType& RHS_Contribution,
+        typename ElementType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateRHSContribution(rElement, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+    }
+
+    void CalculateRHSContribution(
+        ConditionType& rCondition,
+        LocalSystemVectorType& RHS_Contribution,
+        typename ConditionType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateRHSContribution(rCondition, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+    }
+
+    void CalculateLHSContribution(
+        ElementType& rElement,
+        LocalSystemMatrixType& LHS_Contribution,
+        typename ElementType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateLHSContribution(rElement, LHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+    }
+
+#ifdef KRATOS_NONSQUARE_SUPPORT
+    void CalculateLHSContribution(
+        ElementType& rElement,
+        LocalSystemMatrixType& LHS_Contribution,
+        typename ElementType::EquationIdVectorType& rRowEquationIdVector,
+        typename ElementType::EquationIdVectorType& rColEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateLHSContribution(rElement, LHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+    }
+#endif
+
+    void CalculateLHSContribution(
+        ConditionType& rCondition,
+        LocalSystemMatrixType& LHS_Contribution,
+        typename ConditionType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateLHSContribution(rCondition, LHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+    }
+
+#ifdef KRATOS_NONSQUARE_SUPPORT
+    void CalculateLHSContribution(
+        ConditionType& rCondition,
+        LocalSystemMatrixType& LHS_Contribution,
+        typename ConditionType::EquationIdVectorType& rRowEquationIdVector,
+        typename ConditionType::EquationIdVectorType& rColEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) override
+    {
+        mpScheme->CalculateLHSContribution(rCondition, LHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+    }
+#endif
+
+    ///@}
+    ///@name Access
+    ///@{
+
+    /// Set the global projection matrix
+    void SetProjectionOperator(const LocalSystemMatrixType& Phi)
+    {
+        mpPhi = &Phi;
+    }
+
+    ///@}
+    ///@name Input and output
+    ///@{
+
+    /// Turn back information as a string.
+    std::string Info() const override
+    {
+        if (mpScheme == nullptr)
+            return "RayleighRitzProjectionScheme<nullptr>";
+        else
+            return "RayleighRitzProjectionScheme<" + mpScheme->Info() + ">";
+    }
+
+    /// Print information about this object.
+    void PrintInfo(std::ostream& rOStream) const override
+    {
+        rOStream << Info();
+    }
+
+    /// Print object's data.
+    void PrintData(std::ostream& rOStream) const override
+    {
+        if (mpScheme != nullptr)
+            mpScheme->PrintData(rOStream);
+    }
+
+    ///@}
+
+private:
+
+    typename BaseType::Pointer mpScheme = nullptr;
+
+    /// pointer to the global projection matrix. This is used to project the local constribution
+    /// to the reduced system.
+    const LocalSystemMatrixType* mpPhi = nullptr;
+}; /* Class RayleighRitzProjectionScheme */
+
+}  /* namespace Kratos.*/
+
+#endif /* KRATOS_ERSATZ_ANWENDUNG_RAYLEIGH_RITZ_PROJECTION_SCHEME_H_INCLUDED  defined */

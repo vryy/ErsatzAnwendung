@@ -22,7 +22,9 @@
 #include "solving_strategies/builder_and_solvers/builder_and_solver.h"
 #include "solving_strategies/builder_and_solvers/residualbased_elimination_builder_and_solver_deactivation.h"
 #include "custom_strategies/builder_and_solvers/pod_builder_and_solver.h"
+#include "custom_strategies/builder_and_solvers/projection_based_pod_builder_and_solver.h"
 #include "custom_strategies/schemes/element_weighting_scheme.h"
+#include "custom_strategies/schemes/rayleigh_ritz_projection_scheme.h"
 #include "custom_utilities/pod_builder_and_solver_factory.h"
 #include "custom_python/add_custom_strategies_to_python.h"
 
@@ -41,15 +43,18 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
 
     typedef LinearSolver<SparseSpaceType, LocalSpaceType, ModelPart> LinearSolverType;
 
-    typedef BuilderAndSolver<SparseSpaceType, LocalSpaceType, LinearSolverType, ModelPart> BuilderAndSolverType;
-
     typedef Scheme<SparseSpaceType, LocalSpaceType, ModelPart> SchemeType;
+
+    typedef ElementWeightingScheme<SparseSpaceType, LocalSpaceType, ModelPart> ElementWeightingSchemeType;
+    typedef RayleighRitzProjectionScheme<SparseSpaceType, LocalSpaceType, ModelPart> RayleighRitzProjectionSchemeType;
+
+    typedef BuilderAndSolver<SparseSpaceType, LocalSpaceType, LinearSolverType, ModelPart> BuilderAndSolverType;
 
     typedef ResidualBasedEliminationBuilderAndSolverDeactivation<SparseSpaceType, LocalSpaceType, LinearSolverType, ModelPart> ResidualBasedEliminationBuilderAndSolverDeactivationType;
 
     typedef PodBuilderAndSolver<ResidualBasedEliminationBuilderAndSolverDeactivationType> PodResidualBasedEliminationBuilderAndSolverDeactivationType;
+    typedef ProjectionBasedPodBuilderAndSolver<ResidualBasedEliminationBuilderAndSolverDeactivationType> ProjectionBasedPodResidualBasedEliminationBuilderAndSolverDeactivationType;
 
-    typedef ElementWeightingScheme<SparseSpaceType, LocalSpaceType, ModelPart> ElementWeightingSchemeType;
 
     //********************************************************************
     //********************************************************************
@@ -66,12 +71,29 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
     .def("GetPodProcess", &PodResidualBasedEliminationBuilderAndSolverDeactivationType::pGetPodProcess)
     ;
 
+    class_< ProjectionBasedPodResidualBasedEliminationBuilderAndSolverDeactivationType,
+            ProjectionBasedPodResidualBasedEliminationBuilderAndSolverDeactivationType::Pointer,
+            bases<ResidualBasedEliminationBuilderAndSolverDeactivationType>,
+            boost::noncopyable
+          > (
+                "ProjectionBasedPodResidualBasedEliminationBuilderAndSolverDeactivation",
+                init<>()
+            )
+    .def("SetProjectionOperator", &ProjectionBasedPodResidualBasedEliminationBuilderAndSolverDeactivationType::SetProjectionOperator)
+    ;
+
     //********************************************************************
     //********************************************************************
 
-    class_<PodBuilderAndSolverFactory, PodBuilderAndSolverFactory::Pointer, boost::noncopyable>
+    class_<PodBuilderAndSolverFactory, typename PodBuilderAndSolverFactory::Pointer, boost::noncopyable>
     ("PodBuilderAndSolverFactory", init<>())
     .def("Create", &PodBuilderAndSolverFactory::Create<ResidualBasedEliminationBuilderAndSolverDeactivationType>)
+    .staticmethod("Create");
+    ;
+
+    class_<ProjectionBasedPodBuilderAndSolverFactory, typename ProjectionBasedPodBuilderAndSolverFactory::Pointer, boost::noncopyable>
+    ("ProjectionBasedPodBuilderAndSolverFactory", init<>())
+    .def("Create", &ProjectionBasedPodBuilderAndSolverFactory::Create<ResidualBasedEliminationBuilderAndSolverDeactivationType>)
     .staticmethod("Create");
     ;
 
@@ -82,6 +104,11 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
     ("ElementWeightingScheme", init<typename SchemeType::Pointer>())
     .def("SetElementWeight", &ElementWeightingSchemeType::SetElementWeight)
     .def("SetProjectionOperator", &ElementWeightingSchemeType::SetProjectionOperator)
+    ;
+
+    class_<RayleighRitzProjectionSchemeType, RayleighRitzProjectionSchemeType::Pointer, bases<SchemeType>, boost::noncopyable>
+    ("RayleighRitzProjectionScheme", init<typename SchemeType::Pointer>())
+    .def("SetProjectionOperator", &RayleighRitzProjectionSchemeType::SetProjectionOperator)
     ;
 }
 
