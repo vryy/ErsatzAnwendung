@@ -151,6 +151,17 @@ public:
         POD_Utils::WriteMat(filename, variable_name, mSnapshot, false);
     }
 
+    ///@name Input and output
+    ///@{
+
+    /// Turn back information as a string.
+    std::string Info() const override
+    {
+        return "SnapshotCollectingProcess";
+    }
+
+    ///@}
+
 private:
 
     std::vector<Vector> mSnapshot = {};

@@ -219,6 +219,17 @@ public:
         }
     }
 
+    ///@name Input and output
+    ///@{
+
+    /// Turn back information as a string.
+    std::string Info() const override
+    {
+        return "EcswSnapshotCollectingProcess";
+    }
+
+    ///@}
+
 private:
 
     /// Container of the snapshot of the "unassembled" elemental contributions (i.e., the elemental residuals) for ECSW method
