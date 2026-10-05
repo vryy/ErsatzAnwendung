@@ -36,7 +36,20 @@ namespace Python
 using namespace boost::python;
 
 template<class TProcessType>
-boost::python::dict EcswSnapshotCollectingProcess_ConstructSystem(TProcessType& self,
+boost::python::dict EcswSnapshotCollectingProcess_ConstructSystem1(TProcessType& self,
+    const Matrix& Phi, Matrix& rG, Vector& rb)
+{
+    typedef typename TProcessType::IndexType IndexType;
+    std::map<IndexType, IndexType> element_weight_index;
+    self.ConstructSystem(Phi, rG, rb, element_weight_index);
+    boost::python::dict result;
+    for (auto it = element_weight_index.begin(); it != element_weight_index.end(); ++it)
+        result[it->first] = it->second;
+    return result;
+}
+
+template<class TProcessType>
+boost::python::dict EcswSnapshotCollectingProcess_ConstructSystem2(TProcessType& self,
     Matrix& rG, Vector& rb, std::size_t number_of_modes)
 {
     typedef typename TProcessType::IndexType IndexType;
@@ -79,7 +92,8 @@ void ErsatzAnwendung_AddCustomProcessesToPython()
     ("EcswSnapshotCollectingProcess", init<typename LinearSolverType::Pointer>())
     .def("SetForceTolerance", &EcswSnapshotCollectingProcessType::SetForceTolerance)
     .def("SetNormalize", &EcswSnapshotCollectingProcessType::SetNormalize)
-    .def("ConstructSystem", &EcswSnapshotCollectingProcess_ConstructSystem<EcswSnapshotCollectingProcessType>)
+    .def("ConstructSystem", &EcswSnapshotCollectingProcess_ConstructSystem1<EcswSnapshotCollectingProcessType>)
+    .def("ConstructSystem", &EcswSnapshotCollectingProcess_ConstructSystem2<EcswSnapshotCollectingProcessType>)
     ;
 
     class_<RayleighRitzProjectionProcessType, typename RayleighRitzProjectionProcessType::Pointer, bases<PodProcessType>, boost::noncopyable>

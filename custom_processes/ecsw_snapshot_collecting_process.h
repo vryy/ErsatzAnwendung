@@ -128,6 +128,20 @@ public:
 
         /* Construct the system for Non - Negative Least Squares (NNLS) solution */
 
+        this->ConstructSystem(Phi, rG, rb, rElementWeightIndex);
+    }
+
+    /// Construct the system data stemming from collecting snapshots for ECSW.
+    /// This system is used to compute the elemental weighting for ECSW method
+    /// using Non-Negative Least Squares (NNLS) method.
+    void ConstructSystem(const Matrix& Phi, Matrix& rG, Vector& rb,
+            std::map<IndexType, IndexType>& rElementWeightIndex) const
+    {
+        const std::size_t m = Phi.size1(); // system size
+        const std::size_t k = Phi.size2(); // reduced system size
+
+        /* Construct the system for Non - Negative Least Squares (NNLS) solution */
+
         const std::size_t nt = mElementSnapshot.size();
 
         // count the active elements
@@ -135,7 +149,6 @@ public:
         const auto& r_model_part = this->GetModelPart();
         for (auto it = r_model_part.ElementsBegin(); it != r_model_part.ElementsEnd(); ++it)
         {
-            IndexType element_id = it->Id();
             if (it->Is(ACTIVE))
                 ++n_active_elements;
         }
@@ -157,14 +170,14 @@ public:
             noalias(bifull) = ZeroVector(m);
             std::size_t ie = 0;
             double norm_factor = 1.0;
-            for (auto it = r_model_part.ElementsBegin(); it != r_model_part.ElementsEnd(); ++it, ++ie)
+            for (auto it = r_model_part.ElementsBegin(); it != r_model_part.ElementsEnd(); ++it)
             {
                 if (!it->Is(ACTIVE))
                     continue;
 
                 // record the index of the element in the weight vector
 
-                rElementWeightIndex[it->Id()] = ie;
+                rElementWeightIndex[it->Id()] = ie++;
 
                 // assemble to the full residual vector for the i-th snapshot
 
@@ -247,6 +260,7 @@ private:
         std::map<IndexType, Vector> single_snapshot;
         for (auto it = r_model_part.ElementsBegin(); it != r_model_part.ElementsEnd(); ++it)
         {
+            if (!it->Is(ACTIVE)) continue;
             IndexType element_id = it->Id();
             Vector elemental_residual;
             it->CalculateRightHandSide(elemental_residual, r_model_part.GetProcessInfo());
