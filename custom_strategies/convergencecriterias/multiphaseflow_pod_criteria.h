@@ -230,74 +230,45 @@ public:
             if (norm_Dx_AIR == 0.0)
                 ratioAir = 0.0;
 
-            std::cout << "***********************************************"
+            KRATOS_INFO("")
+                      << "***********************************************"
                       << "CONVERGENCE CRITERIA FOR MULTIPHASE PROBLEMS"
                       << "***********************************************"
                       << std::endl;
-            std::cout.precision(6);
-            std::cout.setf(std::ios::scientific);
             if (HasDisplacement)
             {
-                std::cout << "** expected values: \t\t\t\t\t\tabs_tol = " << mAbsoluteTolerance
-                          << "\trel_tol = " << mRelativeTolerance << "\t\t\t\t**" << std::endl;
-                std::cout << "** obtained values displacement:\tratio = " << ratioDisp
-                          << "\t||Dx|| = " << norm_Dx
-                          << "\t||x|| = " << norm_x
-                          << "\t\t\t\t**" << std::endl;
+                KRATOS_INFO("") << std::format("** expected values: \t\t\t\t\t\tabs_tol = {:.6e}\trel_tol = {:.6e}\t\t\t\t**", mAbsoluteTolerance, mRelativeTolerance) << std::endl;
+                KRATOS_INFO("") << std::format("** obtained values displacement:\tratio = {:.6e}\t||Dx|| = {:.6e}\t||x|| = {:.6e}\t\t\t\t**", ratioDisp, norm_Dx, norm_x) << std::endl;
             }
             if (HasWaterPres)
             {
-                std::cout << "** obtained values water pressure:\tratio = " << ratioWater
-                          << "\t||Dx|| = " << norm_Dx_WATER
-                          << "\t||x|| = " << norm_x_WATER
-                          << "\t\t\t\t**" << std::endl;
+                KRATOS_INFO("") << std::format("** obtained values water pressure:\tratio = {:.6e}\t||Dx|| = {:.6e}\t||x|| = {:.6e}\t\t\t\t**", ratioWater, norm_Dx_WATER, norm_x_WATER) << std::endl;
                 if (HasAirPres)
                 {
-                    std::cout << "** obtained values air pressure:\tratio = " << ratioAir
-                              << "\t||Dx|| = " << norm_Dx_AIR
-                              << "\t||x|| = " << norm_x_AIR
-                              << "\t\t\t\t**" << std::endl;
+                    KRATOS_INFO("") << std::format("** obtained values air pressure:\tratio = {:.6e}\t||Dx|| = {:.6e}\t||x|| = {:.6e}\t\t\t\t**", ratioAir, norm_Dx_AIR, norm_x_AIR) << std::endl;
 
-                    std::cout << "** obtained values total:\t\tratio = " << ratioAir + ratioWater + ratioDisp
-                              << "\tchange = " << norm_Dx + norm_Dx_WATER + norm_Dx_AIR
-                              << "\tabsolute = " << norm_x_AIR + norm_x_WATER + norm_x
-                              << "\tenergy = " << norm_b
-                              << "\t**" << std::endl;
+                    KRATOS_INFO("") << std::format("** obtained values total:\t\tratio = {:.6e}\tchange = {:.6e}\tabsolute = {:.6e}\tenergy = {:.6e}\t**", ratioAir + ratioWater + ratioDisp, norm_Dx + norm_Dx_WATER + norm_Dx_AIR, norm_x_AIR + norm_x_WATER + norm_x, norm_b) << std::endl;
                 }
                 else
                 {
-                    std::cout << "** obtained values total:\t\tratio = " << ratioWater + ratioDisp
-                              << "\tchange = " << norm_Dx + norm_Dx_WATER
-                              << "\tabsolute = " << norm_x_WATER + norm_x
-                              << "\tenergy = " << norm_b
-                              << "\t**" << std::endl;
+                    KRATOS_INFO("") << std::format("** obtained values total:\t\tratio = {:.6e}\tchange = {:.6e}\tabsolute = {:.6e}\tenergy = {:.6e}\t**", ratioWater + ratioDisp, norm_Dx + norm_Dx_WATER, norm_x_WATER + norm_x, norm_b) << std::endl;
                 }
             }
             else
             {
                 if (HasAirPres)
                 {
-                    std::cout << "** obtained values air pressure:\tratio = " << ratioAir
-                              << "\t||Dx|| = " << norm_Dx_AIR
-                              << "\t||x|| = " << norm_x_AIR
-                              << "\t\t\t\t**" << std::endl;
+                    KRATOS_INFO("") << std::format("** obtained values air pressure:\tratio = {:.6e}\t||Dx|| = {:.6e}\t||x|| = {:.6e}\t\t\t\t**", ratioAir, norm_Dx_AIR, norm_x_AIR) << std::endl;
 
-                    std::cout << "** obtained values total:\t\tratio = " << ratioAir + ratioDisp
-                              << "\tchange = " << norm_Dx + norm_Dx_AIR
-                              << "\tabsolute = " << norm_x_AIR + norm_x
-                              << "\tenergy = " << norm_b
-                              << "\t**" << std::endl;
+                    KRATOS_INFO("") << std::format("** obtained values total:\t\tratio = {:.6e}\tchange = {:.6e}\tabsolute = {:.6e}\tenergy = {:.6e}\t**", ratioAir + ratioDisp, norm_Dx + norm_Dx_AIR, norm_x_AIR + norm_x, norm_b) << std::endl;
                 }
                 else
                 {
-                    std::cout << "** obtained values total:\t\tratio = " << ratioWater + ratioDisp
-                              << "\tchange = " << norm_Dx
-                              << "\tabsolute = " << norm_x
-                              << "\tenergy = " << norm_b
-                              << "\t**" << std::endl;
+                    KRATOS_INFO("") << std::format("** obtained values total:\t\tratio = {:.6e}\tchange = {:.6e}\tabsolute = {:.6e}\tenergy = {:.6e}\t**", ratioWater + ratioDisp, norm_Dx + norm_Dx_WATER, norm_x_WATER + norm_x, norm_b) << std::endl;
                 }
             }
-            std::cout << "*****************************************************"
+            KRATOS_INFO("")
+                      << "*****************************************************"
                       << "*****************************************************"
                       << "********************************" << std::endl;
 
@@ -368,88 +339,88 @@ public:
 
             if(disp_converged && water_converged && air_converged)
             {
-                std::cout << "Congratulations the solution strategy is converged." << std::endl;
-                std::cout << "Reason for converged displacement:";
+                KRATOS_INFO("") << "Congratulations the solution strategy is converged." << std::endl;
+                KRATOS_INFO("") << "Reason for converged displacement:";
                 if (mCheckType == 1)
                 {
-                    std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
+                    KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
                 }
                 else if (mCheckType == 2)
                 {
                     if (disp_reason_2_case == 1)
-                        std::cout << " {(||Dx||/||x|| = " << ratioDisp << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||Dx||/||x|| = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioDisp, mRelativeTolerance) << std::endl;
                     else if (disp_reason_2_case == 2)
-                        std::cout << " {(||Dx|| = " << norm_Dx << ") <= (abs_tol = " << mAbsoluteTolerance << ")}"
-                                  << " and {(||x|| = " << norm_x << ") <= (abs_tol = " << mAbsoluteTolerance << ")}"
+                        KRATOS_INFO("") << std::format(" {{(||Dx|| = {:.6e}) <= (abs_tol = {:.6e})}}", norm_Dx, mAbsoluteTolerance)
+                                  << " and {{(||x|| = {:.6e}) <= (abs_tol = {:.6e})}}"
                                   << std::endl;
                 }
                 else if (mCheckType == 3)
                 {
-                    std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
+                    KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
                     if (disp_reason_2 == 1)
-                        std::cout << "and {(||Dx||/||x|| = " << ratioDisp << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format("and {{(||Dx||/||x|| = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioDisp, mRelativeTolerance) << std::endl;
                     else if (disp_reason_2_case == 2)
-                        std::cout << "and {(||Dx|| = " << norm_Dx << ") <= (abs_tol = " << mAbsoluteTolerance << ")}"
-                                  << " and {(||x|| = " << norm_x << ") <= (abs_tol = " << mAbsoluteTolerance << ")}"
+                        KRATOS_INFO("") << std::format("and {{(||Dx|| = {:.6e}) <= (abs_tol = {:.6e})}}", norm_Dx, mAbsoluteTolerance)
+                                  << " and {{(||x|| = {:.6e}) <= (abs_tol = {:.6e})}}"
                                   << std::endl;
                 }
                 else if (mCheckType == 4)
                 {
-                    if(all_converged) std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
+                    if(all_converged) KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
                     if (disp_reason_2)
                     {
                         if (disp_reason_2_case == 1)
-                            std::cout << " {(||Dx||/||x|| = " << ratioDisp << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                            KRATOS_INFO("") << std::format(" {{(||Dx||/||x|| = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioDisp, mRelativeTolerance) << std::endl;
                         else if (disp_reason_2_case == 2)
-                            std::cout << " {(||Dx|| = " << norm_Dx << ") <= (abs_tol = " << mAbsoluteTolerance << ")}"
-                                      << " and {(||x|| = " << norm_x << ") <= (abs_tol = " << mAbsoluteTolerance << ")}"
+                            KRATOS_INFO("") << std::format(" {{(||Dx|| = {:.6e}) <= (abs_tol = {:.6e})}}", norm_Dx, mAbsoluteTolerance)
+                                      << " and {{(||x|| = {:.6e}) <= (abs_tol = {:.6e})}}"
                                       << std::endl;
                     }
                 }
 
                 if(HasWaterPres)
                 {
-                    std::cout << "Reason for converged water pressure:";
+                    KRATOS_INFO("") << "Reason for converged water pressure:";
                     if (mCheckType == 1)
                     {
-                        std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mRelativeTolerance) << std::endl;
                     }
                     else if (mCheckType == 2)
                     {
-                        std::cout << " {(||Dx||/||x|| (water) = " << ratioWater << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||Dx||/||x|| (water) = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioWater, mRelativeTolerance) << std::endl;
                     }
                     else if (mCheckType == 3)
                     {
-                        std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mRelativeTolerance << ")}" << std::endl;
-                        std::cout << "and {(||Dx||/||x|| (water) = " << ratioWater << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mRelativeTolerance) << std::endl;
+                        KRATOS_INFO("") << std::format("and {{(||Dx||/||x|| (water) = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioWater, mRelativeTolerance) << std::endl;
                     }
                     else if (mCheckType == 4)
                     {
-                        if(all_converged) std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
-                        if(water_reason_2) std::cout << " {(||Dx||/||x|| (water) = " << ratioWater << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        if(all_converged) KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
+                        if(water_reason_2) KRATOS_INFO("") << std::format(" {{(||Dx||/||x|| (water) = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioWater, mRelativeTolerance) << std::endl;
                     }
                 }
 
                 if(HasAirPres)
                 {
-                    std::cout << "Reason for converged air pressure:";
+                    KRATOS_INFO("") << "Reason for converged air pressure:";
                     if (mCheckType == 4)
                     {
-                        std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
                     }
                     else if (mCheckType == 2)
                     {
-                        std::cout << " {(||Dx||/||x|| (air) = " << ratioAir << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||Dx||/||x|| (air) = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioAir, mRelativeTolerance) << std::endl;
                     }
                     else if (mCheckType == 3)
                     {
-                        std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
-                        std::cout << "and {(||Dx||/||x|| = " << ratioAir << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
+                        KRATOS_INFO("") << std::format("and {{(||Dx||/||x|| = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioAir, mRelativeTolerance) << std::endl;
                     }
                     else if (mCheckType == 4)
                     {
-                        if(all_converged) std::cout << " {(||b|| = " << norm_b << ") <= (expected ||b|| = " << mAbsoluteTolerance << ")}" << std::endl;
-                        if(air_reason_2) std::cout << " {(||Dx||/||x|| (air) = " << ratioAir << ") <= (expected ||Dx||/||x|| = " << mRelativeTolerance << ")}" << std::endl;
+                        if(all_converged) KRATOS_INFO("") << std::format(" {{(||b|| = {:.6e}) <= (expected ||b|| = {:.6e})}}", norm_b, mAbsoluteTolerance) << std::endl;
+                        if(air_reason_2) KRATOS_INFO("") << std::format(" {{(||Dx||/||x|| (air) = {:.6e}) <= (expected ||Dx||/||x|| = {:.6e})}}", ratioAir, mRelativeTolerance) << std::endl;
                     }
                 }
 

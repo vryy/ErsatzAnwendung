@@ -32,7 +32,7 @@ namespace Kratos
     {
         // calling base class register to register Kratos components
         KratosApplication::Register();
-        std::cout << "Initializing KratosErsatzAnwendung..." << std::endl;
+        KRATOS_INFO("ErsatzAnwendung") << "Initializing..." << std::endl;
     }
 
     bool KratosErsatzAnwendung::Has(const std::string& feature)

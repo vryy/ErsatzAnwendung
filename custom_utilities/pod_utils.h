@@ -171,7 +171,7 @@ public:
         dgesvd_(&JOBU, &JOBVT, &M, &N, A.data(), &LDA, S.data(), U.data(), &LDU, VT.data(), &LDVT, &WORKS, &LWORK, &INFO);
 
         LWORK = static_cast<int>(WORKS);
-        std::cout << "Required buffer for SVD operations: " << LWORK << std::endl;
+        KRATOS_INFO("POD_Utils") << "Required buffer for SVD operations: " << LWORK << std::endl;
 
         // perform SVD
         std::vector<double> WORK(LWORK);
@@ -366,7 +366,7 @@ public:
 
         MatrixType mat = ReadMat<MatrixType>(filename, var_name);
         if (mat.size1() != 1 && mat.size2() != 1) {
-            std::cout << "Variable '" << var_name << "' is not a vector.";
+            KRATOS_WARNING("POD_Utils") << "Variable '" << var_name << "' is not a vector.";
             return Vector();
         }
 
@@ -506,7 +506,7 @@ public:
         Mat_VarFree(matvar);
         Mat_Close(matfp);
 
-        std::cout << "Successfully written " << var_name << " to Matlab's MAT-file"
+        KRATOS_INFO("POD_Utils") << "Successfully written " << var_name << " to Matlab's MAT-file"
                   << " " << filename << std::endl;
     }
 #endif

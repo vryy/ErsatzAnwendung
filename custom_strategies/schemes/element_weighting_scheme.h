@@ -197,12 +197,15 @@ public:
             std::size_t reduced_system_size = TDenseSpaceType::Size2(*mpPhi);
             TSystemVectorType aux(reduced_system_size);
             TDenseSpaceType::TransposeMult(*mpPhi, mForceFom, aux);
-            double diff = norm_2(aux - mForceRom);
-            KRATOS_WATCH(norm_2(mForceFom))
-            std::cout << "norm_2(V^T * mForceFom): " << norm_2(aux) << std::endl;
-            // KRATOS_WATCH(mForceRom)
-            KRATOS_WATCH(norm_2(mForceRom))
-            std::cout << "difference reduced force and hyper reduction force: " << diff << std::endl;
+            if (Kernel::GetInstance().GetLogLevel() > 1)
+            {
+                double diff = norm_2(aux - mForceRom);
+                KRATOS_INFO("ElementWeightingScheme") << "mForceFom: " << norm_2(mForceFom) << std::endl;
+                KRATOS_INFO("ElementWeightingScheme") << "norm_2(V^T * mForceFom): " << norm_2(aux) << std::endl;
+                // KRATOS_WATCH(mForceRom)
+                KRATOS_INFO("ElementWeightingScheme") << "mForceRom: " << norm_2(mForceRom) << std::endl;
+                KRATOS_INFO("ElementWeightingScheme") << "difference reduced force and hyper reduction force: " << diff << std::endl;
+            }
             TSparseSpaceType::SetToZero(mForceFom);
             TDenseSpaceType::SetToZero(mForceRom);
         }
