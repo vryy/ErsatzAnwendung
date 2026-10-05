@@ -68,6 +68,13 @@ void POD_Utils_WriteIntVec(POD_Utils& rDummy, const std::string& filename, const
 #endif
 }
 
+void POD_Utils_ListVariables(POD_Utils& rDummy, const std::string& filename)
+{
+#ifdef ERSATZ_APP_USE_MATIO
+    POD_Utils::ListVariables(std::cout, filename);
+#endif
+}
+
 Matrix POD_Utils_ReadMat(POD_Utils& rDummy, const std::string& filename, const std::string& variable_name)
 {
 #ifdef ERSATZ_APP_USE_MATIO
@@ -103,10 +110,7 @@ void ErsatzAnwendung_AddCustomUtilitiesToPython()
     class_<POD_Utils, POD_Utils::Pointer, boost::noncopyable>
     ("POD_Utils", init<>())
     .def("SVD", POD_Utils_SVD)
-#ifdef ERSATZ_APP_USE_MATIO
-    .def("ListVariables", POD_Utils::ListVariables)
-    .staticmethod("ListVariables")
-#endif
+    .def("ListVariables", POD_Utils_ListVariables)
     .def("WriteMat", POD_Utils_WriteMat)
     .def("WriteVec", POD_Utils_WriteVec)
     .def("WriteIntVec", POD_Utils_WriteIntVec)

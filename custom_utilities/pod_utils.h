@@ -260,7 +260,7 @@ public:
 
 #ifdef ERSATZ_APP_USE_MATIO
     ///  List all the variables in the mat file
-    static void ListVariables(const std::string& filename)
+    static void ListVariables(std::ostream& rOstream, const std::string& filename)
     {
         // 1. Open MAT file in Read-Only mode
         mat_t* matfp = Mat_Open(filename.c_str(), MAT_ACC_RDONLY);
@@ -271,23 +271,23 @@ public:
         // Force pointer back to first variable
         Mat_Rewind(matfp);
 
-        std::cout << "\nListing variables in '" << filename << "':\n";
-        std::cout << "--------------------------------------------------\n";
-        std::cout << "Name\t\tType\t\tDimensions\n";
-        std::cout << "--------------------------------------------------\n";
+        rOstream << "\nListing variables in '" << filename << "':\n";
+        rOstream << "--------------------------------------------------\n";
+        rOstream << "Name\t\tType\t\tDimensions\n";
+        rOstream << "--------------------------------------------------\n";
 
         matvar_t* matvar = nullptr;
 
         // 2. Loop through variable headers using Mat_VarReadNextInfo
         while ((matvar = Mat_VarReadNextInfo(matfp)) != nullptr) {
-            std::cout << matvar->name << "\t\t";
-            std::cout << get_matlab_class_string(matvar->class_type) << "\t\t";
+            rOstream << matvar->name << "\t\t";
+            rOstream << get_matlab_class_string(matvar->class_type) << "\t\t";
 
             // Print dimensions (e.g. 10x20)
             for (int i = 0; i < matvar->rank; ++i) {
-                std::cout << matvar->dims[i] << (i < matvar->rank - 1 ? "x" : "");
+                rOstream << matvar->dims[i] << (i < matvar->rank - 1 ? "x" : "");
             }
-            std::cout << "\n";
+            rOstream << "\n";
 
             // 3. Free header metadata memory before reading next
             Mat_VarFree(matvar);
