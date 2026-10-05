@@ -219,39 +219,7 @@ public:
         typename ElementType::EquationIdVectorType& rEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
-        // compute the elemental contribution of FOM
-        mpScheme->CalculateSystemContributions(rElement, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
-
-        if (mpPhi == nullptr)
-            KRATOS_ERROR << "The projection operator is not yet set";
-
-        // construct the ROM contribution
-        if (rEquationIdVector.size() > 0)
-        {
-            // assemble the force of ROM
-            const auto& Phi = *mpPhi;
-            const std::size_t full_system_size = Phi.size1();
-            const std::size_t reduced_system_size = Phi.size2();
-
-            LocalSystemMatrixType localV(rEquationIdVector.size(), reduced_system_size);
-            for (std::size_t j = 0; j < rEquationIdVector.size(); ++j)
-            {
-                if (rEquationIdVector[j] < full_system_size)
-                    noalias(row(localV, j)) = row(Phi, rEquationIdVector[j]);
-                else
-                    noalias(row(localV, j)) = ZeroVector(reduced_system_size);
-            }
-
-            LocalSystemVectorType reduced_elemental_residual = prod(trans(localV), RHS_Contribution);
-            LocalSystemMatrixType reduced_elemental_stiffness = prod(trans(localV), Matrix(prod(LHS_Contribution, localV)));
-
-            // modify the output
-            RHS_Contribution = reduced_elemental_residual;
-            LHS_Contribution = reduced_elemental_stiffness;
-            rEquationIdVector.resize(reduced_system_size);
-            for (std::size_t i = 0; i < reduced_system_size; ++i)
-                rEquationIdVector[i] = i;
-        }
+        CalculateSystemContributionsImpl(rElement, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
     }
 
 #ifdef KRATOS_NONSQUARE_SUPPORT
@@ -263,7 +231,7 @@ public:
         typename ElementType::EquationIdVectorType& rColEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
-        mpScheme->CalculateSystemContributions(rElement, LHS_Contribution, RHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+        KRATOS_ERROR << "RayleighRitzProjectionScheme does not support non-square systems.";
     }
 #endif
 
@@ -274,7 +242,7 @@ public:
         typename ConditionType::EquationIdVectorType& rEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
-        mpScheme->CalculateSystemContributions(rCondition, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+        CalculateSystemContributionsImpl(rCondition, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
     }
 
 #ifdef KRATOS_NONSQUARE_SUPPORT
@@ -286,7 +254,7 @@ public:
         typename ConditionType::EquationIdVectorType& rColEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
-        mpScheme->CalculateSystemContributions(rCondition, LHS_Contribution, RHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+        KRATOS_ERROR << "RayleighRitzProjectionScheme does not support non-square systems.";
     }
 #endif
 
@@ -296,6 +264,7 @@ public:
         typename ElementType::EquationIdVectorType& rEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
+        // compute the elemental contribution of FOM
         mpScheme->CalculateRHSContribution(rElement, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
     }
 
@@ -305,6 +274,7 @@ public:
         typename ConditionType::EquationIdVectorType& rEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
+        // compute the elemental contribution of FOM
         mpScheme->CalculateRHSContribution(rCondition, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
     }
 
@@ -314,6 +284,7 @@ public:
         typename ElementType::EquationIdVectorType& rEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
+        // compute the elemental contribution of FOM
         mpScheme->CalculateLHSContribution(rElement, LHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
     }
 
@@ -325,7 +296,7 @@ public:
         typename ElementType::EquationIdVectorType& rColEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
-        mpScheme->CalculateLHSContribution(rElement, LHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+        KRATOS_ERROR << "RayleighRitzProjectionScheme does not support non-square systems.";
     }
 #endif
 
@@ -335,6 +306,7 @@ public:
         typename ConditionType::EquationIdVectorType& rEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
+        // compute the elemental contribution of FOM
         mpScheme->CalculateLHSContribution(rCondition, LHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
     }
 
@@ -346,7 +318,7 @@ public:
         typename ConditionType::EquationIdVectorType& rColEquationIdVector,
         const ProcessInfo& rCurrentProcessInfo) override
     {
-        mpScheme->CalculateLHSContribution(rCondition, LHS_Contribution, rRowEquationIdVector, rColEquationIdVector, rCurrentProcessInfo);
+        KRATOS_ERROR << "RayleighRitzProjectionScheme does not support non-square systems.";
     }
 #endif
 
@@ -395,6 +367,50 @@ private:
     /// pointer to the global projection matrix. This is used to project the local constribution
     /// to the reduced system.
     const LocalSystemMatrixType* mpPhi = nullptr;
+
+    template<typename TEntityType>
+    void CalculateSystemContributionsImpl(
+        TEntityType& rElement,
+        LocalSystemMatrixType& LHS_Contribution,
+        LocalSystemVectorType& RHS_Contribution,
+        typename TEntityType::EquationIdVectorType& rEquationIdVector,
+        const ProcessInfo& rCurrentProcessInfo) const
+    {
+        // compute the elemental contribution of FOM
+        mpScheme->CalculateSystemContributions(rElement, LHS_Contribution, RHS_Contribution, rEquationIdVector, rCurrentProcessInfo);
+
+        if (mpPhi == nullptr)
+            KRATOS_ERROR << "The projection operator is not yet set";
+
+        // construct the ROM contribution
+        if (rEquationIdVector.size() > 0)
+        {
+            // assemble the force of ROM
+            const auto& Phi = *mpPhi;
+            const std::size_t full_system_size = Phi.size1();
+            const std::size_t reduced_system_size = Phi.size2();
+
+            LocalSystemMatrixType localV(rEquationIdVector.size(), reduced_system_size);
+            for (std::size_t j = 0; j < rEquationIdVector.size(); ++j)
+            {
+                if (rEquationIdVector[j] < full_system_size)
+                    noalias(row(localV, j)) = row(Phi, rEquationIdVector[j]);
+                else
+                    noalias(row(localV, j)) = ZeroVector(reduced_system_size);
+            }
+
+            LocalSystemVectorType reduced_elemental_residual = prod(trans(localV), RHS_Contribution);
+            LocalSystemMatrixType reduced_elemental_stiffness = prod(trans(localV), Matrix(prod(LHS_Contribution, localV)));
+
+            // modify the output
+            RHS_Contribution = reduced_elemental_residual;
+            LHS_Contribution = reduced_elemental_stiffness;
+            rEquationIdVector.resize(reduced_system_size);
+            for (std::size_t i = 0; i < reduced_system_size; ++i)
+                rEquationIdVector[i] = i;
+        }
+    }
+
 }; /* Class RayleighRitzProjectionScheme */
 
 }  /* namespace Kratos.*/
