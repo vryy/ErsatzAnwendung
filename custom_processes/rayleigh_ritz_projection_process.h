@@ -15,6 +15,7 @@
 /* External includes */
 
 /* Project includes */
+#include "utilities/timer.h"
 #include "custom_processes/pod_process.h"
 #include "custom_utilities/pod_utils.h"
 
@@ -59,6 +60,8 @@ private:
     {
         const std::size_t rsize = rPhi.size2(); // size of reduced system
 
+        double solve_time_start = Timer::GetTime();
+
         // construct the reduced linear system
         TLocalSystemMatrixType Ared;
         POD_Utils::WtKV(Ared, rPhi, rA, rPhi);
@@ -74,6 +77,10 @@ private:
 
         // project back the solution to full space
         noalias(rDx) = prod(rPhi, xred);
+
+        double solve_time_end = Timer::GetTime();
+        KRATOS_INFO("RayleighRitzProjectionProcess")
+            << "ApplyProjection Time: " << solve_time_end - solve_time_start << std::endl;
     }
 
     Matrix mPhi; // projection matrix
