@@ -135,6 +135,7 @@ public:
             file.close();
 
             #endif
+
         }
     }
 
@@ -142,6 +143,12 @@ public:
     const std::vector<Vector>& GetSnapshot() const
     {
         return mSnapshot;
+    }
+
+    /// Save the snapshot to file
+    void SaveSnapshot(const std::string& filename, const std::string& variable_name) const
+    {
+        POD_Utils::WriteMat(filename, variable_name, mSnapshot, false);
     }
 
 private:

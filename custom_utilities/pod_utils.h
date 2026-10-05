@@ -259,6 +259,7 @@ public:
     }
 
 #ifdef ERSATZ_APP_USE_MATIO
+
     ///  List all the variables in the mat file
     static void ListVariables(std::ostream& rOstream, const std::string& filename)
     {
@@ -410,6 +411,57 @@ public:
         WriteMat(filename, var_name, col_major_buffer, m, n, append);
     }
 
+    /// Write a list of column vectors as Mat to Matlab's mat file. The output file can be loaded
+    /// directly in Matlab using load(filename)
+    static void WriteMat(const std::string& filename,
+                         const std::string& var_name,
+                         const std::vector<Vector>& V,
+                         bool append)
+    {
+        if (V.empty())
+            KRATOS_ERROR << "Input vector list is empty.";
+
+        const std::size_t m = V[0].size();
+        const std::size_t n = V.size();
+
+        std::vector<double> col_major_buffer;
+        col_major_buffer.reserve(m * n);
+
+        for (size_t col = 0; col < n; ++col) {
+            for (size_t row = 0; row < m; ++row) {
+                col_major_buffer.push_back(V[col](row));
+            }
+        }
+
+        WriteMat(filename, var_name, col_major_buffer, m, n, append);
+    }
+
+    /// Write a list of column vectors as Mat to Matlab's mat file. The output file can be loaded
+    /// directly in Matlab using load(filename)
+    static void WriteMat(const std::string& filename,
+                         const std::string& var_name,
+                         const std::vector<Vector>::const_iterator& it_begin,
+                         const std::vector<Vector>::const_iterator& it_end,
+                         bool append)
+    {
+        if (it_begin == it_end)
+            KRATOS_ERROR << "Input vector list is empty.";
+
+        const std::size_t m = (*it_begin).size();
+        const std::size_t n = std::distance(it_begin, it_end);
+
+        std::vector<double> col_major_buffer;
+        col_major_buffer.reserve(m * n);
+
+        for (size_t col = 0; col < n; ++col) {
+            for (size_t row = 0; row < m; ++row) {
+                col_major_buffer.push_back((*it_begin)(row));
+            }
+        }
+
+        WriteMat(filename, var_name, col_major_buffer, m, n, append);
+    }
+
     /// Write a vector to Matlab's mat file. The output file can be loaded
     /// directly in Matlab using load(filename)
     static void WriteVec(const std::string& filename,
@@ -509,7 +561,7 @@ public:
         KRATOS_INFO("POD_Utils") << "Successfully written " << var_name << " to Matlab's MAT-file"
                   << " " << filename << std::endl;
     }
-#endif
+#endif // ERSATZ_APP_USE_MATIO
 
     /*@} */
     /**@name Access */
