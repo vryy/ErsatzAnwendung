@@ -360,13 +360,16 @@ public:
 
     ///@}
 
-private:
+protected:
 
+    /// pointer to the underlying scheme. This is used to compute the local contribution of FOM
     typename BaseType::Pointer mpScheme = nullptr;
 
     /// pointer to the global projection matrix. This is used to project the local constribution
     /// to the reduced system.
     const LocalSystemMatrixType* mpPhi = nullptr;
+
+private:
 
     template<typename TEntityType>
     void CalculateSystemContributionsImpl(

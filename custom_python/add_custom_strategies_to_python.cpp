@@ -25,6 +25,7 @@
 #include "custom_strategies/builder_and_solvers/projection_based_pod_builder_and_solver.h"
 #include "custom_strategies/schemes/element_weighting_scheme.h"
 #include "custom_strategies/schemes/rayleigh_ritz_projection_scheme.h"
+#include "custom_strategies/schemes/petrov_galerkin_projection_scheme.h"
 #include "custom_strategies/convergencecriterias/multiphaseflow_pod_criteria.h"
 #include "custom_utilities/pod_builder_and_solver_factory.h"
 #include "custom_python/add_custom_strategies_to_python.h"
@@ -48,7 +49,7 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
 
     typedef ElementWeightingScheme<SparseSpaceType, LocalSpaceType, ModelPart> ElementWeightingSchemeType;
     typedef RayleighRitzProjectionScheme<SparseSpaceType, LocalSpaceType, ModelPart> RayleighRitzProjectionSchemeType;
-
+    typedef PetrovGalerkinProjectionScheme<SparseSpaceType, LocalSpaceType, ModelPart> PetrovGalerkinProjectionSchemeType;
     typedef ConvergenceCriteria< SparseSpaceType, LocalSpaceType, ModelPart> ConvergenceCriteriaBaseType;
     typedef MultiPhaseFlowPodCriteria< SparseSpaceType, LocalSpaceType, ModelPart> MultiPhaseFlowPodCriteriaType;
 
@@ -125,6 +126,12 @@ void ErsatzAnwendung_AddCustomStrategiesToPython()
     class_<RayleighRitzProjectionSchemeType, RayleighRitzProjectionSchemeType::Pointer, bases<SchemeType>, boost::noncopyable>
     ("RayleighRitzProjectionScheme", init<typename SchemeType::Pointer>())
     .def("SetProjectionOperator", &RayleighRitzProjectionSchemeType::SetProjectionOperator)
+    ;
+
+    class_<PetrovGalerkinProjectionSchemeType, PetrovGalerkinProjectionSchemeType::Pointer, bases<SchemeType>, boost::noncopyable>
+    ("PetrovGalerkinProjectionScheme", init<typename SchemeType::Pointer>())
+    .def("SetLeftProjectionOperator", &PetrovGalerkinProjectionSchemeType::SetLeftProjectionOperator)
+    .def("SetRightProjectionOperator", &PetrovGalerkinProjectionSchemeType::SetRightProjectionOperator)
     ;
 }
 
