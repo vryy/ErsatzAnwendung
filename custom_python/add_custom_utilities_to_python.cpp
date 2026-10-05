@@ -111,12 +111,12 @@ void ErsatzAnwendung_AddCustomUtilitiesToPython()
     ("POD_Utils", init<>())
     .def("SVD", POD_Utils_SVD)
     .def("ListVariables", POD_Utils_ListVariables)
-    .def("WriteMat", POD_Utils_WriteMat)
-    .def("WriteVec", POD_Utils_WriteVec)
-    .def("WriteIntVec", POD_Utils_WriteIntVec)
-    .def("ReadMat", POD_Utils_ReadMat)
-    .def("ReadVec", POD_Utils_ReadVec)
-    .def("ReadIntVec", POD_Utils_ReadIntVec)
+    .def("WriteMat", &POD_Utils_WriteMat)
+    .def("WriteVec", &POD_Utils_WriteVec)
+    .def("WriteIntVec", &POD_Utils_WriteIntVec)
+    .def("ReadMat", &POD_Utils_ReadMat)
+    .def("ReadVec", &POD_Utils_ReadVec)
+    .def("ReadIntVec", &POD_Utils_ReadIntVec)
     ;
 }
 
